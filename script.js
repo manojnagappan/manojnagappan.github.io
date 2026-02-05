@@ -8,3 +8,10 @@ function openTab(event, id) {
     document.getElementById(id).classList.add('active');
     event.target.classList.add('active');
 }
+
+function toggleBibtex(id) {
+  const el = document.getElementById(id);
+  el.style.display = (el.style.display === "none" || el.style.display === "")
+    ? "block"
+    : "none";
+}
