@@ -167,3 +167,32 @@ footer {
   max-width: 90%;
   overflow-x: auto;
 }
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.profile-pic {
+  width: 110px;
+  height: 110px;
+  object-fit: cover;
+  border-radius: 4px;     /* subtle, not circular */
+  border: 1px solid #ddd;
+}
+
+.header-text h1 {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 500;
+}
+
+.header-text p {
+  margin: 4px 0;
+}
+
+.subtitle {
+  color: #666;
+  font-size: 14px;
+}
