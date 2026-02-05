@@ -113,6 +113,7 @@ footer {
     color: #1f3c88;
 }
 
+
 .form-group {
   margin-bottom: 15px;
 }
@@ -129,4 +130,40 @@ footer {
   padding: 8px 10px;
   font-size: 14px;
   box-sizing: border-box;
+}
+
+
+.pub-links {
+  margin-top: 6px;
+}
+
+.pub-links {
+  margin-top: 6px;
+}
+
+.pub-links a {
+  display: inline-block;
+  padding: 4px 8px;
+  margin-right: 6px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  text-decoration: none;
+  color: #0044cc;
+  background: #f9f9f9;
+}
+
+.pub-links a:hover {
+  background: #eaeaea;
+}
+
+.bibtex-box {
+  display: none;
+  margin-top: 8px;
+  padding: 10px;
+  background: #fffde7;
+  border: 1px solid #ddd;
+  font-size: 13px;
+  max-width: 90%;
+  overflow-x: auto;
 }
