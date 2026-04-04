@@ -17,30 +17,23 @@ function toggleBibtex(id) {
 }
 
 
-// Get audio element AFTER page loads
-let hoverSound;
-
 document.addEventListener("DOMContentLoaded", () => {
-    hoverSound = document.getElementById("hoverSound");
-
     const links = document.querySelectorAll("a");
+
+    let lastPlayed = 0;
 
     links.forEach(link => {
         link.addEventListener("mouseenter", () => {
-            if (hoverSound) {
-                hoverSound.currentTime = 0;
-                hoverSound.play().catch(() => {}); // avoid error
+            console.log("hover detected"); // 👈 debug
+
+            const now = Date.now();
+
+            if (now - lastPlayed > 100) {
+                const sound = new Audio("hover.mp3");
+                sound.volume = 0.3;
+                sound.play().catch(err => console.log(err));
+                lastPlayed = now;
             }
         });
     });
 });
-
-// Unlock audio after first click
-document.addEventListener("click", () => {
-    if (hoverSound) {
-        hoverSound.play().then(() => {
-            hoverSound.pause();
-            hoverSound.currentTime = 0;
-        }).catch(() => {});
-    }
-}, { once: true });
