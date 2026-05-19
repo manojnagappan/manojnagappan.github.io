@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Car Movement</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ff88;
+      overflow: hidden;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+      color: #00ff88;
+      text-shadow: 0 0 12px #00ff8866;
+    }
+
+    #gameCanvas {
+      display: block;
+      border: 1px solid #00ff8844;
+      box-shadow: 0 0 40px #00ff8822, inset 0 0 60px #00000088;
+      background: #1a1a1a;
+      border-radius: 2px;
+    }
+
+    #hud {
+      margin-top: 12px;
+      display: flex;
+      gap: 32px;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      color: #00ff8899;
+    }
+
+    #hud span { color: #00ff88; }
+
+    #controls {
+      margin-top: 10px;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: #ffffff44;
+      text-align: center;
+    }
+
+    /* on-screen d-pad for touch/mobile */
+    #dpad {
+      margin-top: 18px;
+      display: grid;
+      grid-template-columns: repeat(3, 52px);
+      grid-template-rows: repeat(3, 52px);
+      gap: 4px;
+    }
+
+    .dpad-btn {
+      background: #00ff8811;
+      border: 1px solid #00ff8844;
+      border-radius: 4px;
+      color: #00ff88;
+      font-size: 1.2rem;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .dpad-btn:active, .dpad-btn.pressed {
+      background: #00ff8833;
+    }
+
+    .dpad-blank { visibility: hidden; }
+  </style>
+</head>
+<body>
+
+<h1>Car Movement</h1>
+
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<div id="hud">
+  SPEED: <span id="speedVal">0.00</span> &nbsp;|&nbsp; ANGLE: <span id="angleVal">0°</span>
+</div>
+
+<div id="controls">ARROW KEYS to drive &nbsp;·&nbsp; or use the pad below</div>
+
+<div id="dpad">
+  <div class="dpad-blank"></div>
+  <button class="dpad-btn" id="btn-up">▲</button>
+  <div class="dpad-blank"></div>
+
+  <button class="dpad-btn" id="btn-left">◀</button>
+  <div class="dpad-blank"></div>
+  <button class="dpad-btn" id="btn-right">▶</button>
+
+  <div class="dpad-blank"></div>
+  <button class="dpad-btn" id="btn-down">▼</button>
+  <div class="dpad-blank"></div>
+</div>
+
+<script>
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const W = canvas.width;
+  const H = canvas.height;
+
+  // ── Car state (mirrors pygame variables) ──────────────────────────────────
+  let x = W / 2;
+  let y = H / 2;
+  let angle = 0;   // degrees
+  let speed = 0;
+
+  const CAR_W = 60;
+  const CAR_H = 30;
+
+  // ── Key state ─────────────────────────────────────────────────────────────
+  const keys = { ArrowLeft: false, ArrowRight: false, ArrowUp: false, ArrowDown: false };
+
+  document.addEventListener('keydown', e => {
+    if (keys.hasOwnProperty(e.key)) { e.preventDefault(); keys[e.key] = true; }
+  });
+  document.addEventListener('keyup', e => {
+    if (keys.hasOwnProperty(e.key)) keys[e.key] = false;
+  });
+
+  // ── On-screen d-pad ───────────────────────────────────────────────────────
+  const btnMap = {
+    'btn-up':    'ArrowUp',
+    'btn-down':  'ArrowDown',
+    'btn-left':  'ArrowLeft',
+    'btn-right': 'ArrowRight',
+  };
+
+  Object.entries(btnMap).forEach(([id, key]) => {
+    const btn = document.getElementById(id);
+
+    const press   = () => { keys[key] = true;  btn.classList.add('pressed'); };
+    const release = () => { keys[key] = false; btn.classList.remove('pressed'); };
+
+    btn.addEventListener('mousedown',  press);
+    btn.addEventListener('mouseup',    release);
+    btn.addEventListener('mouseleave', release);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); press(); },   { passive: false });
+    btn.addEventListener('touchend',   e => { e.preventDefault(); release(); }, { passive: false });
+  });
+
+  // ── Grid helper ───────────────────────────────────────────────────────────
+  function drawGrid() {
+    ctx.strokeStyle = '#ffffff08';
+    ctx.lineWidth = 1;
+    const step = 50;
+    for (let gx = 0; gx <= W; gx += step) {
+      ctx.beginPath(); ctx.moveTo(gx, 0); ctx.lineTo(gx, H); ctx.stroke();
+    }
+    for (let gy = 0; gy <= H; gy += step) {
+      ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(W, gy); ctx.stroke();
+    }
+  }
+
+  // ── Draw car ──────────────────────────────────────────────────────────────
+  function drawCar(cx, cy, angleDeg) {
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(-angleDeg * Math.PI / 180);   // canvas Y is flipped vs pygame
+
+    // Body
+    ctx.fillStyle = '#00ff55';
+    ctx.shadowColor = '#00ff5566';
+    ctx.shadowBlur = 14;
+    ctx.fillRect(-CAR_W / 2, -CAR_H / 2, CAR_W, CAR_H);
+
+    // Windshield
+    ctx.fillStyle = '#003322';
+    ctx.fillRect(CAR_W / 2 - 18, -CAR_H / 2 + 5, 14, CAR_H - 10);
+
+    // Wheels
+    ctx.fillStyle = '#111';
+    ctx.shadowBlur = 0;
+    [[-CAR_W/2+6, -CAR_H/2-3], [-CAR_W/2+6, CAR_H/2-3],
+     [CAR_W/2-18,  -CAR_H/2-3], [CAR_W/2-18, CAR_H/2-3]].forEach(([wx, wy]) => {
+      ctx.fillRect(wx, wy, 10, 6);
+    });
+
+    ctx.restore();
+  }
+
+  // ── Exhaust particles ─────────────────────────────────────────────────────
+  const particles = [];
+
+  function spawnParticle() {
+    if (Math.abs(speed) < 0.2) return;
+    const rad = -angle * Math.PI / 180;
+    particles.push({
+      x: x - Math.cos(rad) * (CAR_W / 2 + 4),
+      y: y + Math.sin(rad) * (CAR_W / 2 + 4),
+      vx: (Math.random() - 0.5) * 0.6 - Math.cos(rad) * Math.abs(speed) * 0.4,
+      vy: (Math.random() - 0.5) * 0.6 + Math.sin(rad) * Math.abs(speed) * 0.4,
+      life: 1,
+      size: 3 + Math.random() * 3
+    });
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life -= 0.04;
+      if (p.life <= 0) particles.splice(i, 1);
+    }
+  }
+
+  function drawParticles() {
+    particles.forEach(p => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(80, 200, 120, ${p.life * 0.5})`;
+      ctx.fill();
+    });
+  }
+
+  // ── HUD ───────────────────────────────────────────────────────────────────
+  const speedEl = document.getElementById('speedVal');
+  const angleEl = document.getElementById('angleVal');
+
+  // ── Main loop (mirrors pygame while loop) ─────────────────────────────────
+  let last = performance.now();
+
+  function loop(now) {
+    const dt = Math.min((now - last) / 1000, 0.05);
+    last = now;
+
+    // ── Steering (pygame: angle += 3 per frame @ 60fps → 180°/s) ─────────
+    if (keys.ArrowLeft)  angle += 180 * dt;
+    if (keys.ArrowRight) angle -= 180 * dt;
+
+    // ── Acceleration (pygame: speed += 0.1 per frame) ─────────────────────
+    if (keys.ArrowUp)   speed += 6 * dt;    // 0.1 * 60
+    if (keys.ArrowDown) speed -= 6 * dt;
+
+    // ── Friction (pygame: speed *= 0.98 per frame → ^60 per second) ────────
+    speed *= Math.pow(0.98, 60 * dt);
+
+    // ── Motion ────────────────────────────────────────────────────────────
+    const rad = angle * Math.PI / 180;
+    x += speed * Math.cos(rad);
+    y -= speed * Math.sin(rad);
+
+    // Wrap around edges (bonus: keeps car on screen)
+    if (x < -CAR_W)  x = W + CAR_W;
+    if (x > W + CAR_W) x = -CAR_W;
+    if (y < -CAR_H)  y = H + CAR_H;
+    if (y > H + CAR_H) y = -CAR_H;
+
+    // ── Particles ─────────────────────────────────────────────────────────
+    spawnParticle();
+    updateParticles();
+
+    // ── Clear ─────────────────────────────────────────────────────────────
+    ctx.fillStyle = '#1a1a1a';
+    ctx.fillRect(0, 0, W, H);
+
+    drawGrid();
+    drawParticles();
+    drawCar(x, y, angle);
+
+    // ── HUD update ────────────────────────────────────────────────────────
+    speedEl.textContent = Math.abs(speed).toFixed(2);
+    angleEl.textContent = ((angle % 360 + 360) % 360).toFixed(0) + '°';
+
+    requestAnimationFrame(loop);
+  }
+
+  requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
