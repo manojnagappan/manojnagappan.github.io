@@ -34,6 +34,7 @@
     <span class="tab" onclick="openTab(event, 'publications')">Publications</span>
     <!--<span class="tab" onclick="openTab(event, 'projects')">Projects</span> -->
     <span class="tab" onclick="openTab(event, 'services')">Services</span>
+    <span class="tab" onclick="openTab(event, 'playground')">Playground</span>
     <span class="tab" onclick="openTab(event, 'contact')">Contact</span>
 </nav>
 
@@ -359,6 +360,47 @@
         target="_blank" >Scientific Reports</a>
     </li>
     </ol>
+</section>
+
+<section id="playground" class="content">
+    
+    <br>
+    <a href="vehicle_dynamics.html" target="_blank" class="btn-primary">
+        🚗 Vehicle Dynamics Simulation
+    </a>
+    <p>A small interactive demo was built using the bicycle model of vehicle dynamics in Python's Pygame library</p>
+
+    <div style="margin-top: 16px; position: relative; display: inline-block; width: 100%;">
+        <iframe 
+            src="vehicle_dynamics.html" 
+            width="100%" 
+            height="620" 
+            style="border: none; border-radius: 6px; display: block;"
+            title="Car Game">
+        </iframe>
+        <a href="vehicle_dynamics.html" target="_blank" 
+           title="Open fullscreen"
+           style="
+               position: absolute;
+               bottom: 12px;
+               right: 12px;
+               width: 32px;
+               height: 32px;
+               background: rgba(0,0,0,0.6);
+               color: white;
+               border-radius: 4px;
+               display: flex;
+               align-items: center;
+               justify-content: center;
+               text-decoration: none;
+               font-size: 16px;
+               backdrop-filter: blur(4px);
+               transition: background 0.2s;
+           "
+           onmouseover="this.style.background='rgba(0,0,0,0.9)'"
+           onmouseout="this.style.background='rgba(0,0,0,0.6)'"
+        >⛶</a>
+    </div>
 </section>
 
 <section id="contact" class="content">
