@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LTV/LTI Control Solver</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#0e0e0e;--surface:#161616;--surface2:#1c1c1c;
+  --border:#2a2a2a;--border2:#333;
+  --accent:#00e5ff;--accent2:#ff4081;--accent3:#aaff00;--accent4:#ff9800;
+  --text:#e0e0e0;--muted:#555;--muted2:#888;
+  --mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px;}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:22px;}
+.header h1{font-size:1.5rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 20px #00e5ff44;font-family:var(--mono);}
+.header p{font-size:.72rem;color:var(--muted2);letter-spacing:.1em;margin-top:5px;font-family:var(--mono);}
+.eq{font-size:.78rem;color:#ffffff55;font-family:var(--mono);margin-top:6px;letter-spacing:.05em;}
+.eq span{color:var(--accent3);}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:300px 1fr;gap:16px;width:100%;max-width:1200px;}
+@media(max-width:800px){.layout{grid-template-columns:1fr;}}
+
+/* SIDEBAR */
+.sidebar{display:flex;flex-direction:column;gap:12px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;}
+.panel-title{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-bottom:11px;border-bottom:1px solid #00e5ff1a;padding-bottom:5px;display:flex;align-items:center;gap:7px;}
+.panel-title .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+
+/* DIM CONTROL */
+.dim-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.dim-label{font-family:var(--mono);font-size:.65rem;color:var(--muted2);}
+.dim-btn{background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:.8rem;width:26px;height:26px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;}
+.dim-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dim-val{font-family:var(--mono);font-size:.85rem;color:var(--accent);min-width:18px;text-align:center;}
+
+/* MATRIX INPUT */
+.mat-label{font-family:var(--mono);font-size:.6rem;color:var(--muted2);margin-bottom:5px;letter-spacing:.1em;}
+.mat-label span{color:var(--accent3);}
+.mat-grid{display:inline-grid;gap:3px;margin-bottom:10px;}
+.mat-cell{background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.7rem;padding:3px 5px;outline:none;width:72px;transition:border-color .15s;}
+.mat-cell:focus{border-color:var(--accent);}
+.mat-cell::placeholder{color:#333;}
+.mat-wrap{overflow-x:auto;padding-bottom:4px;}
+.bracket-wrap{display:flex;align-items:center;gap:3px;}
+.bracket{font-size:2rem;color:#ffffff22;line-height:1;font-weight:100;user-select:none;}
+
+/* TIME INPUTS */
+.field{margin-bottom:8px;}
+.lbl{font-family:var(--mono);font-size:.6rem;color:var(--muted2);display:block;margin-bottom:3px;letter-spacing:.08em;}
+.inp{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.72rem;padding:4px 7px;outline:none;transition:border-color .15s;}
+.inp:focus{border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+
+/* BUTTONS */
+.plot-btn{width:100%;background:linear-gradient(135deg,#00e5ff1a,#00e5ff0a);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all .2s;margin-top:4px;}
+.plot-btn:hover{background:linear-gradient(135deg,#00e5ff2a,#00e5ff18);box-shadow:0 0 16px #00e5ff2a;}
+.preset-list{display:flex;flex-wrap:wrap;gap:5px;}
+.preset-btn{background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:.58rem;padding:4px 7px;cursor:pointer;transition:all .15s;}
+.preset-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+#status{font-family:var(--mono);font-size:.62rem;min-height:15px;margin-top:7px;letter-spacing:.04em;word-break:break-word;}
+.ok{color:var(--accent3);}
+.err{color:var(--accent2);}
+
+/* HINT */
+.hint{font-family:var(--mono);font-size:.58rem;color:var(--muted);line-height:1.85;letter-spacing:.04em;}
+.hint span{color:var(--accent3);}
+.hint b{color:var(--accent);font-weight:normal;}
+
+/* CANVAS COLUMN */
+.canvas-col{display:flex;flex-direction:column;gap:12px;}
+.chart-wrap{position:relative;}
+.chart-label{font-family:var(--mono);font-size:.58rem;color:var(--accent);letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+canvas.pc{display:block;width:100%;border:1px solid var(--border);border-radius:5px;background:#0c0c0c;}
+.legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:.58rem;color:var(--muted2);}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+
+/* TABS */
+.tab-row{display:flex;gap:4px;margin-bottom:10px;}
+.tab{background:none;border:1px solid var(--border);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:.6rem;padding:4px 10px;cursor:pointer;transition:all .15s;letter-spacing:.08em;}
+.tab.active{border-color:var(--accent);color:var(--accent);background:#00e5ff0a;}
+
+/* NORM DISPLAY */
+.norm-panel{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:10px 14px;font-family:var(--mono);font-size:.62rem;color:var(--muted2);display:flex;flex-wrap:wrap;gap:12px;}
+.norm-item{display:flex;flex-direction:column;gap:2px;}
+.norm-key{font-size:.55rem;color:var(--muted);letter-spacing:.1em;}
+.norm-val{color:var(--accent);font-size:.7rem;}
+
+.section-sep{height:1px;background:var(--border);margin:8px 0;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>LTV / LTI Control Solver</h1>
+  <p>arbitrary dimension &nbsp;·&nbsp; time-varying or time-invariant matrices &nbsp;·&nbsp; RK4</p>
+  <div class="eq">
+    <span>ẋ(t) = A(t)x(t) + B(t)u(t)</span> &nbsp;&nbsp; <span>u(t) = −K(t)x(t)</span>
+    &nbsp;&nbsp;→&nbsp;&nbsp; <span>ẋ(t) = [A(t)−B(t)K(t)]x(t)</span>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Dimensions</div>
+      <div class="dim-row">
+        <span class="dim-label">State dim n =</span>
+        <button class="dim-btn" onclick="changeDim(-1)">−</button>
+        <span class="dim-val" id="dimVal">2</span>
+        <button class="dim-btn" onclick="changeDim(+1)">+</button>
+        <span class="dim-label" style="color:var(--muted)">(max unlimited)</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--muted);">
+        A: n×n &nbsp;|&nbsp; B: n×n &nbsp;|&nbsp; K: n×n &nbsp;|&nbsp; x₀: n×1
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Matrix / Vector Inputs</div>
+      <div class="tab-row">
+        <button class="tab active" onclick="switchTab('A')">A(t)</button>
+        <button class="tab" onclick="switchTab('B')">B(t)</button>
+        <button class="tab" onclick="switchTab('K')">K(t)</button>
+        <button class="tab" onclick="switchTab('x0')">x₀</button>
+      </div>
+
+      <!-- hint for t-varying -->
+      <div style="font-family:var(--mono);font-size:.57rem;color:var(--muted);margin-bottom:8px;">
+        Each cell: constant or expression in <span style="color:var(--accent3)">t</span>.
+        e.g. <span style="color:var(--accent3)">sin(t)</span>, <span style="color:var(--accent3)">exp(-t)</span>
+      </div>
+
+      <div id="matA" class="mat-section"></div>
+      <div id="matB" class="mat-section" style="display:none"></div>
+      <div id="matK" class="mat-section" style="display:none"></div>
+      <div id="matX0" class="mat-section" style="display:none"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Simulation</div>
+      <div class="row2">
+        <div><label class="lbl">T start</label><input class="inp" id="t0" value="0"/></div>
+        <div><label class="lbl">T end</label><input class="inp" id="tf" value="10"/></div>
+      </div>
+      <div class="row2">
+        <div><label class="lbl">Step h</label><input class="inp" id="hStep" value="0.01"/></div>
+        <div><label class="lbl">Plot pts</label><input class="inp" id="plotPts" value="800"/></div>
+      </div>
+      <button class="plot-btn" onclick="solve()">▶ Simulate</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Presets</div>
+      <div class="preset-list">
+        <button class="preset-btn" onclick="loadPreset('stable2')">Stable 2D</button>
+        <button class="preset-btn" onclick="loadPreset('oscillator')">Oscillator</button>
+        <button class="preset-btn" onclick="loadPreset('tvgain')">TV Gain</button>
+        <button class="preset-btn" onclick="loadPreset('Jordan3')">Jordan 3D</button>
+        <button class="preset-btn" onclick="loadPreset('unstable4')">Unstable 4D</button>
+        <button class="preset-btn" onclick="loadPreset('tvperiodic')">Periodic TV</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Syntax</div>
+      <div class="hint">
+        <b>t</b> — time variable<br>
+        <span>sin(t)  cos(t)  exp(t)</span><br>
+        <span>sqrt(t)  abs(t)  log(t)</span><br>
+        <span>pow(t,2)  PI  E</span><br>
+        Constant: just a number e.g. <span>-3.5</span><br>
+        LTI: no <b>t</b> needed in cells<br>
+        Blank cell = 0
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CANVAS COLUMN -->
+  <div class="canvas-col">
+
+    <div id="normDisplay" class="norm-panel" style="display:none"></div>
+
+    <div class="chart-wrap">
+      <div class="chart-label">State trajectories &nbsp; x<sub>i</sub>(t)</div>
+      <canvas class="pc" id="stateCanvas"></canvas>
+      <div class="legend-row" id="stateLegend"></div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-label">Control inputs &nbsp; u<sub>i</sub>(t)</div>
+      <canvas class="pc" id="ctrlCanvas"></canvas>
+      <div class="legend-row" id="ctrlLegend"></div>
+    </div>
+
+    <div class="chart-wrap" id="phaseWrap" style="display:none">
+      <div class="chart-label" style="justify-content:space-between;flex-wrap:wrap;gap:6px;">
+        <span>Phase portrait</span>
+        <span style="display:flex;align-items:center;gap:6px;font-size:.58rem;">
+          <span style="color:var(--muted2)">X-axis</span>
+          <select id="phaseX" onchange="redrawPhase()" style="background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--accent3);font-family:var(--mono);font-size:.6rem;padding:2px 5px;outline:none;"></select>
+          <span style="color:var(--muted2)">Y-axis</span>
+          <select id="phaseY" onchange="redrawPhase()" style="background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--accent3);font-family:var(--mono);font-size:.6rem;padding:2px 5px;outline:none;"></select>
+          <span style="color:var(--muted2);margin-left:4px;">color by</span>
+          <select id="phaseColor" onchange="redrawPhase()" style="background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--accent3);font-family:var(--mono);font-size:.6rem;padding:2px 5px;outline:none;">
+            <option value="time">time</option>
+            <option value="speed">speed</option>
+            <option value="norm">‖x‖</option>
+          </select>
+        </span>
+      </div>
+      <canvas class="pc" id="phaseCanvas"></canvas>
+      <div id="phaseLegendBar" style="margin-top:5px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:.58rem;color:var(--muted2);">
+        <span id="phaseLegMin"></span>
+        <div id="phaseLegGrad" style="flex:1;height:5px;border-radius:2px;"></div>
+        <span id="phaseLegMax"></span>
+        <span style="margin-left:8px;color:var(--accent)">● start</span>
+        <span style="color:var(--accent2)">● end</span>
+      </div>
+    </div>
+
+    <div class="chart-wrap" id="normWrap" style="display:none">
+      <div class="chart-label">State norm &nbsp; ‖x(t)‖₂</div>
+      <canvas class="pc" id="normCanvas"></canvas>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─── GLOBALS ────────────────────────────────────────────────────────────────
+const PALETTE=['#00e5ff','#ff4081','#aaff00','#ff9800','#e040fb','#00e676','#ffeb3b','#f44336','#40c4ff','#ea80fc','#ccff90','#ffd180','#84ffff','#ff6e40','#b9f6ca','#ffe57f'];
+let DIM = 2;
+let activeTab = 'A';
+let solData = null;
+
+// ─── DIM CONTROL ────────────────────────────────────────────────────────────
+function changeDim(d) {
+  const newDim = Math.max(1, Math.min(16, DIM + d));
+  if (newDim === DIM) return;
+  // preserve existing values
+  const vals = {A: getMatVals('A'), B: getMatVals('B'), K: getMatVals('K'), x0: getMatVals('x0')};
+  DIM = newDim;
+  document.getElementById('dimVal').textContent = DIM;
+  buildAllMats(vals);
+}
+
+function getMatVals(name) {
+  const els = document.querySelectorAll(`#mat${name === 'x0' ? 'X0' : name} .mat-cell`);
+  const res = {};
+  els.forEach(el => { res[el.dataset.key] = el.value; });
+  return res;
+}
+
+// ─── BUILD MATRIX GRIDS ─────────────────────────────────────────────────────
+function buildAllMats(prevVals) {
+  buildMat('A', DIM, DIM, prevVals ? prevVals.A : {});
+  buildMat('B', DIM, DIM, prevVals ? prevVals.B : {});
+  buildMat('K', DIM, DIM, prevVals ? prevVals.K : {});
+  buildVec('x0', DIM,     prevVals ? prevVals.x0 : {});
+}
+
+function buildMat(name, rows, cols, prev) {
+  const id = 'mat' + name;
+  const el = document.getElementById(id);
+  let html = `<div class="mat-label"><span>${name}(t)</span> — ${rows}×${cols} matrix</div>`;
+  html += `<div class="mat-wrap"><div class="bracket-wrap"><span class="bracket">[</span><div class="mat-grid" style="grid-template-columns:repeat(${cols},auto)">`;
+  for (let r=0;r<rows;r++) for (let c=0;c<cols;c++) {
+    const key = `${r}_${c}`;
+    const val = prev && prev[key] !== undefined ? prev[key] : (r===c?'0':'0');
+    html += `<input class="mat-cell" data-key="${key}" value="${escHtml(val)}" placeholder="0" title="${name}[${r}][${c}]"/>`;
+  }
+  html += `</div><span class="bracket">]</span></div></div>`;
+  el.innerHTML = html;
+}
+
+function buildVec(name, rows, prev) {
+  const id = 'matX0';
+  const el = document.getElementById(id);
+  let html = `<div class="mat-label"><span>x₀</span> — initial state (${rows}×1)</div>`;
+  html += `<div class="mat-wrap"><div class="bracket-wrap"><span class="bracket">[</span><div class="mat-grid" style="grid-template-columns:auto">`;
+  for (let r=0;r<rows;r++) {
+    const key = `${r}_0`;
+    const val = prev && prev[key] !== undefined ? prev[key] : '0';
+    html += `<input class="mat-cell" data-key="${key}" value="${escHtml(val)}" placeholder="0" title="x0[${r}]"/>`;
+  }
+  html += `</div><span class="bracket">]</span></div></div>`;
+  el.innerHTML = html;
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ─── TAB SWITCHING ───────────────────────────────────────────────────────────
+function switchTab(name) {
+  activeTab = name;
+  ['A','B','K','x0'].forEach(n => {
+    const id = n === 'x0' ? 'matX0' : 'mat'+n;
+    document.getElementById(id).style.display = n === name ? '' : 'none';
+  });
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['A','B','K','x0'][i] === name);
+  });
+}
+
+// ─── PARSE MATRIX FROM INPUTS ────────────────────────────────────────────────
+function parseMatFn(name, rows, cols) {
+  const id = name === 'x0' ? 'matX0' : 'mat'+name;
+  const fns = [];
+  for (let r=0;r<rows;r++) {
+    fns.push([]);
+    for (let c=0;c<cols;c++) {
+      const el = document.querySelector(`#${id} [data-key="${r}_${c}"]`);
+      const raw = el ? el.value.trim() : '0';
+      fns[r].push(compileExpr(raw || '0'));
+    }
+  }
+  return (t) => fns.map(row => row.map(f => f(t)));
+}
+
+function parseVecFn(rows) {
+  const fns = [];
+  for (let r=0;r<rows;r++) {
+    const el = document.querySelector(`#matX0 [data-key="${r}_0"]`);
+    const raw = el ? el.value.trim() : '0';
+    fns.push(compileExpr(raw || '0'));
+  }
+  // x0 is constant (evaluate at t=0)
+  return fns.map(f => f(0));
+}
+
+function compileExpr(expr) {
+  let e = expr
+    .replace(/\bsin\b/g,'Math.sin').replace(/\bcos\b/g,'Math.cos').replace(/\btan\b/g,'Math.tan')
+    .replace(/\bsqrt\b/g,'Math.sqrt').replace(/\babs\b/g,'Math.abs').replace(/\bexp\b/g,'Math.exp')
+    .replace(/\blog\b/g,'Math.log').replace(/\bpow\b/g,'Math.pow').replace(/\bPI\b/g,'Math.PI')
+    .replace(/\bE\b/g,'Math.E').replace(/\batan\b/g,'Math.atan').replace(/\basin\b/g,'Math.asin')
+    .replace(/\bacos\b/g,'Math.acos').replace(/\bcosh\b/g,'Math.cosh').replace(/\bsinh\b/g,'Math.sinh')
+    .replace(/\^/g,'**');
+  try {
+    return new Function('t', '"use strict"; return (' + e + ');');
+  } catch {
+    throw new Error('Cannot parse: ' + expr);
+  }
+}
+
+// ─── MATRIX MATH ─────────────────────────────────────────────────────────────
+function matMul(A, B) {
+  const m=A.length, n=B[0].length, p=B.length;
+  return Array.from({length:m},(_,i)=>Array.from({length:n},(_,j)=>{let s=0;for(let k=0;k<p;k++)s+=A[i][k]*B[k][j];return s;}));
+}
+function matSub(A,B){return A.map((r,i)=>r.map((v,j)=>v-B[i][j]));}
+function matVecMul(M, v){return M.map(row=>row.reduce((s,val,j)=>s+val*v[j],0));}
+function vecAdd(a,b){return a.map((v,i)=>v+b[i]);}
+function vecScale(v,s){return v.map(x=>x*s);}
+function vecNorm(v){return Math.sqrt(v.reduce((s,x)=>s+x*x,0));}
+
+// ─── RK4 SOLVER ──────────────────────────────────────────────────────────────
+function ode_rhs(Afn, Bfn, Kfn, t, x) {
+  const A = Afn(t), B = Bfn(t), K = Kfn(t);
+  // Acl = A - B*K
+  const BK = matMul(B, K);
+  const Acl = matSub(A, BK);
+  return matVecMul(Acl, x);
+}
+
+function solve() {
+  const status = document.getElementById('status');
+  status.textContent = ''; status.className = '';
+  try {
+    const n = DIM;
+    const Afn = parseMatFn('A', n, n);
+    const Bfn = parseMatFn('B', n, n);
+    const Kfn = parseMatFn('K', n, n);
+    const x0  = parseVecFn(n);
+
+    const t0   = parseFloat(document.getElementById('t0').value) || 0;
+    const tf   = parseFloat(document.getElementById('tf').value) || 10;
+    const h    = parseFloat(document.getElementById('hStep').value) || 0.01;
+    const maxP = parseInt(document.getElementById('plotPts').value) || 800;
+
+    let x = x0.slice();
+    let t = t0;
+    const totalSteps = Math.ceil((tf - t0) / h);
+
+    const tArr = [t0], xArr = [x.slice()];
+
+    for (let s = 0; s < totalSteps; s++) {
+      const k1 = ode_rhs(Afn, Bfn, Kfn, t,       x);
+      const k2 = ode_rhs(Afn, Bfn, Kfn, t+h/2,   vecAdd(x, vecScale(k1, h/2)));
+      const k3 = ode_rhs(Afn, Bfn, Kfn, t+h/2,   vecAdd(x, vecScale(k2, h/2)));
+      const k4 = ode_rhs(Afn, Bfn, Kfn, t+h,     vecAdd(x, vecScale(k3, h)));
+      x = x.map((xi,i) => xi + h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]));
+      t += h;
+      if (!x.every(isFinite)) { status.textContent = '⚠ Diverged at t=' + t.toFixed(4); status.className='err'; break; }
+      tArr.push(t); xArr.push(x.slice());
+    }
+
+    // compute u = -K(t)x at each step
+    const uArr = tArr.map((ti, idx) => {
+      const K = Kfn(ti);
+      return matVecMul(K, xArr[idx]).map(v => -v);
+    });
+
+    const norms = xArr.map(xi => vecNorm(xi));
+
+    // downsample
+    const stride = Math.max(1, Math.floor(tArr.length / maxP));
+    const ts=[], xs=[], us=[], ns=[];
+    for (let i=0;i<tArr.length;i+=stride){ts.push(tArr[i]);xs.push(xArr[i]);us.push(uArr[i]);ns.push(norms[i]);}
+
+    solData = {ts, xs, us, ns, n};
+    drawAll();
+
+    // stats
+    const finalNorm = norms[norms.length-1];
+    const maxNorm   = Math.max(...norms);
+    showNorms(finalNorm, maxNorm, tArr.length);
+    status.textContent = '✓ ' + tArr.length + ' steps · n=' + n;
+    status.className = 'ok';
+  } catch(err) {
+    status.textContent = '⚠ ' + err.message;
+    status.className = 'err';
+  }
+}
+
+function showNorms(finalNorm, maxNorm, steps) {
+  const el = document.getElementById('normDisplay');
+  el.style.display = 'flex';
+  el.innerHTML = `
+    <div class="norm-item"><div class="norm-key">‖x(T)‖₂</div><div class="norm-val">${finalNorm.toExponential(3)}</div></div>
+    <div class="norm-item"><div class="norm-key">max ‖x‖₂</div><div class="norm-val">${maxNorm.toExponential(3)}</div></div>
+    <div class="norm-item"><div class="norm-key">steps</div><div class="norm-val">${steps}</div></div>
+    <div class="norm-item"><div class="norm-key">dim n</div><div class="norm-val">${DIM}</div></div>
+    <div class="norm-item"><div class="norm-key">stable?</div><div class="norm-val" style="color:${finalNorm<1e-3?'var(--accent3)':'var(--accent2)'}">${finalNorm<1e-3?'YES':'CHECK'}</div></div>
+  `;
+}
+
+// ─── DRAWING ─────────────────────────────────────────────────────────────────
+function setupCanvas(id) {
+  const cv = document.getElementById(id);
+  const W = cv.parentElement.clientWidth;
+  cv.width = W; cv.height = Math.round(W * 0.38);
+  return cv;
+}
+
+function niceStep(range, ticks) {
+  if (!range || !isFinite(range)) return 1;
+  const raw = range/ticks, mag = Math.pow(10, Math.floor(Math.log10(Math.abs(raw)||1)));
+  const nv = raw/mag;
+  return (nv<1.5?1:nv<3.5?2:nv<7.5?5:10)*mag;
+}
+function fmt(v){ if(!isFinite(v))return'∞'; if(Math.abs(v)>=1e4||(Math.abs(v)<0.001&&v!==0))return v.toExponential(2); return parseFloat(v.toPrecision(4)).toString(); }
+
+function drawTrajectory(canvasId, legendId, ts, data, labelFn) {
+  const cv = setupCanvas(canvasId);
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const P={t:12,b:34,l:50,r:14};
+  ctx.clearRect(0,0,W,H);
+
+  const m = data[0].length;
+  let ymin=Infinity, ymax=-Infinity;
+  data.forEach(row=>row.forEach(v=>{if(isFinite(v)){ymin=Math.min(ymin,v);ymax=Math.max(ymax,v);}}));
+  const tmin=ts[0], tmax=ts[ts.length-1];
+  const ypad=(ymax-ymin)*0.08||0.5; ymin-=ypad; ymax+=ypad;
+
+  const cx=t=>P.l+(t-tmin)/(tmax-tmin)*(W-P.l-P.r);
+  const cy=y=>P.t+(ymax-y)/(ymax-ymin)*(H-P.t-P.b);
+
+  // grid
+  ctx.strokeStyle='#ffffff07'; ctx.lineWidth=1;
+  const sT=niceStep(tmax-tmin,8), sY=niceStep(ymax-ymin,6);
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax+sT*.01;gx+=sT){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=Math.ceil(ymin/sY)*sY;gy<=ymax+sY*.01;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+
+  // axes
+  ctx.strokeStyle='#ffffff1a'; ctx.lineWidth=1;
+  const ay0=Math.max(P.t,Math.min(H-P.b,cy(0)));
+  ctx.beginPath();ctx.moveTo(P.l,ay0);ctx.lineTo(W-P.r,ay0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+
+  // tick labels
+  ctx.fillStyle='#ffffff33'; ctx.font='8.5px Share Tech Mono'; ctx.textAlign='center';
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax+sT*.01;gx+=sT){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.fillText(fmt(gx),x,H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(ymin/sY)*sY;gy<=ymax+sY*.01;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+  ctx.textAlign='left'; ctx.fillStyle='#ffffff22'; ctx.font='8px Share Tech Mono';
+  ctx.fillText('t',W-P.r+2,H-P.b+3);
+
+  // curves — limit legend to 8 visible, draw all
+  const MAX_DRAW = Math.min(m, PALETTE.length);
+  for(let i=0;i<MAX_DRAW;i++){
+    const col=PALETTE[i%PALETTE.length];
+    ctx.strokeStyle=col; ctx.lineWidth=1.6; ctx.lineJoin='round';
+    ctx.beginPath(); let pen=false;
+    ts.forEach((tt,k)=>{
+      const v=data[k][i];
+      if(!isFinite(v)){pen=false;return;}
+      const px=cx(tt), py=cy(v);
+      if(!pen){ctx.moveTo(px,py);pen=true;}else ctx.lineTo(px,py);
+    });
+    ctx.stroke();
+  }
+
+  // legend (max 8 items)
+  const leg=document.getElementById(legendId); leg.innerHTML='';
+  for(let i=0;i<Math.min(m,8);i++){
+    leg.innerHTML+=`<span class="leg-item"><span class="leg-dot" style="background:${PALETTE[i%PALETTE.length]}"></span>${labelFn(i)}</span>`;
+  }
+  if(m>8) leg.innerHTML+=`<span class="leg-item" style="color:var(--muted)">+${m-8} more</span>`;
+}
+
+function drawNorm(ts, ns) {
+  document.getElementById('normWrap').style.display='block';
+  const cv=setupCanvas('normCanvas');
+  const ctx=cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const P={t:12,b:34,l:50,r:14};
+  ctx.clearRect(0,0,W,H);
+
+  const tmin=ts[0], tmax=ts[ts.length-1];
+  let ymin=0, ymax=Math.max(...ns.filter(isFinite))||1;
+  ymax*=1.08;
+
+  const cx=t=>P.l+(t-tmin)/(tmax-tmin)*(W-P.l-P.r);
+  const cy=y=>P.t+(ymax-y)/(ymax-ymin)*(H-P.t-P.b);
+
+  ctx.strokeStyle='#ffffff07'; ctx.lineWidth=1;
+  const sT=niceStep(tmax-tmin,8), sY=niceStep(ymax-ymin,5);
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax;gx+=sT){const x=cx(gx);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=0;gy<=ymax;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+
+  ctx.strokeStyle='#ffffff1a'; ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+
+  ctx.fillStyle='#ffffff33'; ctx.font='8.5px Share Tech Mono'; ctx.textAlign='center';
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax;gx+=sT){ctx.fillText(fmt(gx),cx(gx),H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=0;gy<=ymax;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+
+  ctx.strokeStyle='#aaff00'; ctx.lineWidth=1.8; ctx.lineJoin='round';
+  ctx.beginPath(); let pen=false;
+  ts.forEach((tt,k)=>{
+    const v=ns[k]; if(!isFinite(v)){pen=false;return;}
+    const px=cx(tt),py=cy(v);
+    if(!pen){ctx.moveTo(px,py);pen=true;}else ctx.lineTo(px,py);
+  });
+  ctx.stroke();
+}
+
+function populatePhaseSelectors() {
+  const sx = document.getElementById('phaseX');
+  const sy = document.getElementById('phaseY');
+  const prevX = sx.value, prevY = sy.value;
+  sx.innerHTML = ''; sy.innerHTML = '';
+  for (let i = 0; i < DIM; i++) {
+    sx.innerHTML += `<option value="${i}"${i==0?' selected':''}>x[${i}]</option>`;
+    sy.innerHTML += `<option value="${i}"${i==1?' selected':''}>x[${i}]</option>`;
+  }
+  // restore previous if still valid
+  if (prevX !== '' && parseInt(prevX) < DIM) sx.value = prevX;
+  if (prevY !== '' && parseInt(prevY) < DIM) sy.value = prevY;
+  // if same after restore, offset Y
+  if (sx.value === sy.value) {
+    const xi = parseInt(sx.value);
+    sy.value = xi === DIM-1 ? xi-1 : xi+1;
+  }
+}
+
+function redrawPhase() {
+  if (solData && DIM >= 2) drawPhase(solData.ts, solData.xs);
+}
+
+function colorForMode(mode, k, total, xs, ns) {
+  if (mode === 'time') {
+    const t = k / total;
+    return `hsl(${180 + t*160},100%,58%)`;
+  }
+  if (mode === 'speed') {
+    // speed = approximate |dx/dt| from consecutive points — proxy with norm diff
+    const dn = xs[k] && xs[k-1] ? vecNorm(xs[k].map((v,i)=>v-xs[k-1][i])) : 0;
+    const maxDn = 0.5; // normalize loosely
+    const t = Math.min(1, dn / maxDn);
+    return `hsl(${(1-t)*240},100%,58%)`;  // blue=slow, red=fast
+  }
+  if (mode === 'norm') {
+    const maxN = Math.max(...ns);
+    const t = maxN > 0 ? ns[k] / maxN : 0;
+    return `hsl(${(1-t)*120},100%,55%)`; // green=small, red=large
+  }
+  return '#00e5ff';
+}
+
+function gradientCSSForMode(mode) {
+  if (mode === 'time')  return 'linear-gradient(to right, hsl(180,100%,58%), hsl(340,100%,58%))';
+  if (mode === 'speed') return 'linear-gradient(to right, hsl(240,100%,58%), hsl(0,100%,58%))';
+  if (mode === 'norm')  return 'linear-gradient(to right, hsl(120,100%,55%), hsl(0,100%,55%))';
+}
+
+function drawPhase(ts, xs) {
+  if (DIM < 2) { document.getElementById('phaseWrap').style.display='none'; return; }
+  document.getElementById('phaseWrap').style.display='block';
+
+  const xi = parseInt(document.getElementById('phaseX').value) || 0;
+  const yi = parseInt(document.getElementById('phaseY').value) || 1;
+  const mode = document.getElementById('phaseColor').value;
+
+  const cv = setupCanvas('phaseCanvas');
+  const ctx = cv.getContext('2d');
+  const W=cv.width, H=cv.height;
+  const P={t:12,b:34,l:52,r:14};
+  ctx.clearRect(0,0,W,H);
+
+  let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
+  xs.forEach(r=>{
+    if(isFinite(r[xi])){xmin=Math.min(xmin,r[xi]);xmax=Math.max(xmax,r[xi]);}
+    if(isFinite(r[yi])){ymin=Math.min(ymin,r[yi]);ymax=Math.max(ymax,r[yi]);}
+  });
+  const px=(xmax-xmin)*.08||.5; xmin-=px; xmax+=px;
+  const py=(ymax-ymin)*.08||.5; ymin-=py; ymax+=py;
+
+  const cx=v=>P.l+(v-xmin)/(xmax-xmin)*(W-P.l-P.r);
+  const cy=v=>P.t+(ymax-v)/(ymax-ymin)*(H-P.t-P.b);
+
+  // grid
+  ctx.strokeStyle='#ffffff07'; ctx.lineWidth=1;
+  const sx=niceStep(xmax-xmin,6), sy=niceStep(ymax-ymin,6);
+  for(let gx=Math.ceil(xmin/sx)*sx;gx<=xmax;gx+=sx){const x=cx(gx);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=Math.ceil(ymin/sy)*sy;gy<=ymax;gy+=sy){const y=cy(gy);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+
+  // axes
+  ctx.strokeStyle='#ffffff1a'; ctx.lineWidth=1;
+  const ay0=Math.max(P.t,Math.min(H-P.b,cy(0)));
+  const ax0=Math.max(P.l,Math.min(W-P.r,cx(0)));
+  ctx.beginPath();ctx.moveTo(P.l,ay0);ctx.lineTo(W-P.r,ay0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ax0,P.t);ctx.lineTo(ax0,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+
+  // tick labels
+  ctx.fillStyle='#ffffff33'; ctx.font='8.5px Share Tech Mono'; ctx.textAlign='center';
+  for(let gx=Math.ceil(xmin/sx)*sx;gx<=xmax;gx+=sx){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.fillText(fmt(gx),x,H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(ymin/sy)*sy;gy<=ymax;gy+=sy){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+
+  // axis labels
+  ctx.fillStyle='#ffffff44'; ctx.font='9px Share Tech Mono'; ctx.textAlign='center';
+  ctx.fillText(`x[${xi}]`, W-P.r-18, H-P.b+11);
+  ctx.textAlign='right'; ctx.fillText(`x[${yi}]`, P.l-3, P.t+9);
+
+  // norms for color mode
+  const ns = xs.map(r => vecNorm(r));
+  const total = xs.length;
+
+  // trajectory — colored segments
+  ctx.lineWidth=1.8; ctx.lineJoin='round';
+  for(let k=1;k<total;k++){
+    if(!isFinite(xs[k][xi])||!isFinite(xs[k][yi])) continue;
+    ctx.strokeStyle = colorForMode(mode, k, total, xs, ns);
+    ctx.globalAlpha = 0.85;
+    ctx.beginPath();
+    ctx.moveTo(cx(xs[k-1][xi]), cy(xs[k-1][yi]));
+    ctx.lineTo(cx(xs[k][xi]),   cy(xs[k][yi]));
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+
+  // start / end dots
+  ctx.fillStyle='#00e5ff';
+  ctx.beginPath(); ctx.arc(cx(xs[0][xi]),cy(xs[0][yi]),5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ff4081';
+  ctx.beginPath(); ctx.arc(cx(xs[total-1][xi]),cy(xs[total-1][yi]),5,0,Math.PI*2); ctx.fill();
+
+  // legend bar
+  const minLabel = mode==='time' ? fmt(ts[0]) : mode==='speed' ? 'slow' : '0';
+  const maxLabel = mode==='time' ? fmt(ts[ts.length-1]) : mode==='speed' ? 'fast' : fmt(Math.max(...ns));
+  document.getElementById('phaseLegMin').textContent = minLabel;
+  document.getElementById('phaseLegMax').textContent = maxLabel;
+  document.getElementById('phaseLegGrad').style.background = gradientCSSForMode(mode);
+}
+
+function drawAll() {
+  if (!solData) return;
+  const {ts, xs, us, ns} = solData;
+  drawTrajectory('stateCanvas', 'stateLegend', ts, xs, i=>`x[${i}]`);
+  drawTrajectory('ctrlCanvas',  'ctrlLegend',  ts, us, i=>`u[${i}]`);
+  populatePhaseSelectors();
+  drawPhase(ts, xs);
+  drawNorm(ts, ns);
+}
+
+// ─── PRESETS ─────────────────────────────────────────────────────────────────
+const PRESETS = {
+  stable2: {
+    n:2,
+    A:[[-1,1],[0,-2]], B:[[1,0],[0,1]], K:[[1,0],[0,1]],
+    x0:[5,-3], t0:0, tf:8, h:0.01,
+    Atv:false
+  },
+  oscillator: {
+    n:2,
+    A:[[0,1],[-1,0]], B:[[0,0],[1,0]], K:[[0,0],[2,1]],
+    x0:[3,0], t0:0, tf:15, h:0.01,
+    Atv:false
+  },
+  tvgain: {
+    // LTV: A(t) has time-varying damping
+    n:2,
+    A:[['0','1'],['-1','-exp(-t)']], B:[['0'],['1']], K:[['0','0'],['3','2']],
+    x0:[4,0], t0:0, tf:12, h:0.01,
+    Atv:true
+  },
+  Jordan3: {
+    n:3,
+    A:[[-2,1,0],[0,-2,1],[0,0,-3]], B:[[1,0,0],[0,1,0],[0,0,1]], K:[[1,0,0],[0,1,0],[0,0,1]],
+    x0:[5,3,-2], t0:0, tf:6, h:0.005,
+    Atv:false
+  },
+  unstable4: {
+    n:4,
+    A:[[1,0,0,0],[0,2,0,0],[0,0,-1,0],[0,0,0,-2]],
+    B:[[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]],
+    K:[[3,0,0,0],[0,4,0,0],[0,0,0,0],[0,0,0,0]],
+    x0:[2,1,3,1], t0:0, tf:5, h:0.005,
+    Atv:false
+  },
+  tvperiodic: {
+    n:2,
+    A:[['cos(t)','-1'],['1','cos(t)']], B:[['1','0'],['0','1']], K:[['2','0'],['0','2']],
+    x0:[3,3], t0:0, tf:20, h:0.01,
+    Atv:true
+  }
+};
+
+function loadPreset(key) {
+  const p = PRESETS[key];
+  DIM = p.n;
+  document.getElementById('dimVal').textContent = DIM;
+  buildAllMats({});
+
+  const matNames = ['A','B','K'];
+  matNames.forEach(name => {
+    const mat = p[name];
+    for (let r=0;r<mat.length;r++) {
+      for (let c=0;c<mat[r].length;c++) {
+        const id = 'mat'+name;
+        const el = document.querySelector(`#${id} [data-key="${r}_${c}"]`);
+        if (el) el.value = String(mat[r][c]);
+      }
+    }
+  });
+  // x0
+  p.x0.forEach((v,i)=>{
+    const el = document.querySelector(`#matX0 [data-key="${i}_0"]`);
+    if(el) el.value = String(v);
+  });
+
+  document.getElementById('t0').value = p.t0;
+  document.getElementById('tf').value = p.tf;
+  document.getElementById('hStep').value = p.h;
+
+  solve();
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+window.addEventListener('resize', ()=>{ if(solData) drawAll(); });
+
+// default identity matrices
+function setDefaultMats() {
+  buildAllMats({});
+  // A = -I, B = I, K = I, x0 = [5,-3]
+  for(let i=0;i<DIM;i++){
+    ['A','B','K'].forEach(name=>{
+      const id='mat'+name;
+      const el=document.querySelector(`#${id} [data-key="${i}_${i}"]`);
+      if(el) el.value = name==='A'?'-1':'1';
+    });
+    const x0el=document.querySelector(`#matX0 [data-key="${i}_0"]`);
+    if(x0el) x0el.value = i===0?'5':i===1?'-3':'1';
+  }
+}
+
+setDefaultMats();
+loadPreset('stable2');
+</script>
+</body>
+</html>
