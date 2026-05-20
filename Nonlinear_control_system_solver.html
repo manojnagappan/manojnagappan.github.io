@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Nonlinear Control Solver</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#0e0e0e;--surface:#161616;--surface2:#1c1c1c;--border:#2a2a2a;--border2:#333;--accent:#00e5ff;--accent2:#ff4081;--accent3:#aaff00;--text:#e0e0e0;--muted:#555;--muted2:#888;--mono:'Share Tech Mono',monospace;--sans:'Rajdhani',sans-serif;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px 60px;}
+.header{text-align:center;margin-bottom:22px;}
+.header h1{font-size:1.55rem;letter-spacing:.25em;text-transform:uppercase;color:var(--accent);text-shadow:0 0 20px #00e5ff44;font-family:var(--mono);}
+.header p{font-size:.72rem;color:var(--muted2);letter-spacing:.1em;margin-top:5px;font-family:var(--mono);}
+.layout{display:grid;grid-template-columns:280px 1fr;gap:16px;width:100%;max-width:1160px;}
+@media(max-width:780px){.layout{grid-template-columns:1fr;}}
+.sidebar{display:flex;flex-direction:column;gap:12px;}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:14px;}
+.panel-title{font-family:var(--mono);font-size:.6rem;letter-spacing:.22em;color:var(--accent);text-transform:uppercase;margin-bottom:10px;border-bottom:1px solid #00e5ff1a;padding-bottom:5px;display:flex;align-items:center;gap:6px;}
+.panel-title .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);flex-shrink:0;}
+
+/* dim control */
+.dim-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.dim-label{font-family:var(--mono);font-size:.62rem;color:var(--muted2);}
+.dim-btn{background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:.85rem;width:24px;height:24px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;line-height:1;}
+.dim-btn:hover{border-color:var(--accent);color:var(--accent);}
+.dim-val{font-family:var(--mono);font-size:.9rem;color:var(--accent);min-width:20px;text-align:center;}
+
+/* equation rows */
+.eq-block{margin-bottom:6px;}
+.eq-label{font-family:var(--mono);font-size:.58rem;color:var(--muted2);margin-bottom:3px;letter-spacing:.08em;display:flex;align-items:center;gap:6px;}
+.eq-label .swatch{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+textarea.teq{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.7rem;padding:4px 7px;outline:none;transition:border-color .15s;resize:none;min-height:32px;}
+textarea.teq:focus{border-color:var(--accent);}
+textarea.teq::placeholder{color:#333;}
+
+input.inp,select.inp{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.72rem;padding:4px 7px;outline:none;transition:border-color .15s;}
+input.inp:focus,select.inp:focus{border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:7px;}
+.field{margin-bottom:7px;}
+.lbl{font-family:var(--mono);font-size:.58rem;color:var(--muted2);display:block;margin-bottom:3px;letter-spacing:.08em;}
+
+/* x0 row inline */
+.x0-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:5px;margin-bottom:8px;}
+.x0-item label{font-family:var(--mono);font-size:.55rem;color:var(--muted);display:block;margin-bottom:2px;}
+.x0-item input{width:100%;background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:var(--mono);font-size:.68rem;padding:3px 6px;outline:none;transition:border-color .15s;}
+.x0-item input:focus{border-color:var(--accent);}
+
+.plot-btn{width:100%;background:linear-gradient(135deg,#00e5ff1a,#00e5ff0a);border:1px solid var(--accent);border-radius:4px;color:var(--accent);font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;padding:9px;cursor:pointer;transition:all .2s;margin-top:4px;}
+.plot-btn:hover{background:linear-gradient(135deg,#00e5ff2a,#00e5ff18);box-shadow:0 0 14px #00e5ff28;}
+.preset-list{display:flex;flex-wrap:wrap;gap:5px;}
+.preset-btn{background:#0a0a0a;border:1px solid var(--border);border-radius:3px;color:var(--muted2);font-family:var(--mono);font-size:.58rem;padding:4px 7px;cursor:pointer;transition:all .15s;}
+.preset-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+#status{font-family:var(--mono);font-size:.6rem;min-height:14px;margin-top:6px;word-break:break-word;}
+.ok{color:var(--accent3);} .err{color:var(--accent2);}
+
+.hint{font-family:var(--mono);font-size:.58rem;color:var(--muted);line-height:1.85;letter-spacing:.04em;}
+.hint span{color:var(--accent3);} .hint b{color:var(--accent);font-weight:normal;}
+
+/* canvas col */
+.canvas-col{display:flex;flex-direction:column;gap:12px;}
+.chart-wrap{position:relative;}
+.chart-label{font-family:var(--mono);font-size:.58rem;color:var(--accent);letter-spacing:.18em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;}
+.chart-label .phase-controls{display:flex;align-items:center;gap:5px;font-size:.57rem;}
+.phase-controls span{color:var(--muted2);}
+.phase-controls select{background:#0a0a0a;border:1px solid var(--border2);border-radius:3px;color:var(--accent3);font-family:var(--mono);font-size:.58rem;padding:2px 4px;outline:none;}
+canvas.pc{display:block;width:100%;border:1px solid var(--border);border-radius:5px;background:#0c0c0c;cursor:crosshair;}
+.legend-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-family:var(--mono);font-size:.58rem;color:var(--muted2);}
+.leg-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.norm-panel{background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:9px 13px;font-family:var(--mono);font-size:.6rem;color:var(--muted2);display:flex;flex-wrap:wrap;gap:12px;}
+.norm-item{display:flex;flex-direction:column;gap:2px;}
+.norm-key{font-size:.53rem;color:var(--muted);letter-spacing:.1em;}
+.norm-val{color:var(--accent);font-size:.68rem;}
+.leg-grad{display:flex;align-items:center;gap:6px;margin-top:4px;font-family:var(--mono);font-size:.55rem;color:var(--muted2);}
+.leg-grad-bar{flex:1;height:4px;border-radius:2px;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Nonlinear Control Solver</h1>
+  <p>ẋ(t) = f(x(t), u(t)) &nbsp;·&nbsp; u<sub>i</sub> = g<sub>i</sub>(x) &nbsp;·&nbsp; RK4 &nbsp;·&nbsp; unlimited states</p>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Dimensions</div>
+      <div class="dim-row">
+        <span class="dim-label">States n =</span>
+        <button class="dim-btn" onclick="changeDim(-1)">−</button>
+        <span class="dim-val" id="dimVal">2</span>
+        <button class="dim-btn" onclick="changeDim(+1)">+</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Dynamics ẋ<sub>i</sub> = f<sub>i</sub>(x, u)</div>
+      <div id="stateEqns"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Control u<sub>i</sub>(x)</div>
+      <div id="ctrlLaws"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Initial Conditions x(0)</div>
+      <div id="x0fields"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Simulation</div>
+      <div class="row2">
+        <div><label class="lbl">T start</label><input class="inp" id="t0" value="0"/></div>
+        <div><label class="lbl">T end</label><input class="inp" id="tf" value="10"/></div>
+      </div>
+      <div class="row2">
+        <div><label class="lbl">Step h</label><input class="inp" id="hStep" value="0.02"/></div>
+        <div><label class="lbl">Plot pts</label><input class="inp" id="plotPts" value="600"/></div>
+      </div>
+      <button class="plot-btn" onclick="solve()">▶ Simulate</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Presets</div>
+      <div class="preset-list">
+        <button class="preset-btn" onclick="loadPreset('vanderpol')">Van der Pol</button>
+        <button class="preset-btn" onclick="loadPreset('pendulum')">Pendulum</button>
+        <button class="preset-btn" onclick="loadPreset('lorenz3')">Lorenz 3D</button>
+        <button class="preset-btn" onclick="loadPreset('duffing')">Duffing</button>
+        <button class="preset-btn" onclick="loadPreset('rossler3')">Rössler 3D</button>
+        <button class="preset-btn" onclick="loadPreset('coupled4')">Coupled 4D</button>
+        <button class="preset-btn" onclick="loadPreset('chain6')">Chain 6D</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title"><span class="dot"></span>Syntax</div>
+      <div class="hint">
+        States: <span>x[0], x[1], …</span><br>
+        Controls: <span>u[0], u[1], …</span><br>
+        <span>sin cos tan sqrt abs</span><br>
+        <span>exp log pow atan</span><br>
+        <b>PI  E</b> &nbsp; constants<br>
+        Blank = 0
+      </div>
+    </div>
+
+  </div>
+
+  <div class="canvas-col">
+    <div id="normDisplay" class="norm-panel" style="display:none"></div>
+
+    <div class="chart-wrap">
+      <div class="chart-label">State trajectories x<sub>i</sub>(t)</div>
+      <canvas class="pc" id="stateCanvas"></canvas>
+      <div class="legend-row" id="stateLegend"></div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-label">Control inputs u<sub>i</sub>(t)</div>
+      <canvas class="pc" id="ctrlCanvas"></canvas>
+      <div class="legend-row" id="ctrlLegend"></div>
+    </div>
+
+    <div class="chart-wrap" id="phaseWrap" style="display:none">
+      <div class="chart-label">
+        <span>Phase portrait</span>
+        <div class="phase-controls">
+          <span>X</span>
+          <select id="phaseX" onchange="redrawPhase()"></select>
+          <span>Y</span>
+          <select id="phaseY" onchange="redrawPhase()"></select>
+          <span>color</span>
+          <select id="phaseColor" onchange="redrawPhase()">
+            <option value="time">time</option>
+            <option value="speed">speed</option>
+            <option value="norm">‖x‖</option>
+          </select>
+        </div>
+      </div>
+      <canvas class="pc" id="phaseCanvas"></canvas>
+      <div class="leg-grad" id="phaseGradRow">
+        <span id="phaseGradMin"></span>
+        <div class="leg-grad-bar" id="phaseGradBar"></div>
+        <span id="phaseGradMax"></span>
+        <span style="margin-left:10px;color:var(--accent)">● start</span>
+        <span style="color:var(--accent2)">● end</span>
+      </div>
+    </div>
+
+    <div class="chart-wrap" id="normWrap" style="display:none">
+      <div class="chart-label">State norm ‖x(t)‖₂</div>
+      <canvas class="pc" id="normCanvas"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const PALETTE=['#00e5ff','#ff4081','#aaff00','#ff9800','#e040fb','#00e676','#ffeb3b','#f44336','#40c4ff','#ea80fc','#ccff90','#ffd180','#84ffff','#ff6e40','#b9f6ca','#ffe57f'];
+let N = 2;
+let solData = null;
+
+// ── DIM ──────────────────────────────────────────────────────────────────────
+function changeDim(d) {
+  const newN = Math.max(1, N + d);
+  if (newN === N) return;
+  const prev = captureExprs();
+  N = newN;
+  document.getElementById('dimVal').textContent = N;
+  buildStateUI(prev);
+}
+
+function captureExprs() {
+  const f=[], u=[], x0=[];
+  for (let i=0; i<N; i++) {
+    f.push((document.getElementById('f'+i)||{}).value||'');
+    u.push((document.getElementById('u'+i)||{}).value||'');
+    x0.push((document.getElementById('x0_'+i)||{}).value||'0');
+  }
+  return {f,u,x0};
+}
+
+// ── BUILD UI ─────────────────────────────────────────────────────────────────
+function buildStateUI(prev) {
+  prev = prev || {f:[],u:[],x0:[]};
+  const eq = document.getElementById('stateEqns');
+  const cl = document.getElementById('ctrlLaws');
+  const x0el = document.getElementById('x0fields');
+  eq.innerHTML=''; cl.innerHTML=''; x0el.innerHTML='';
+
+  // x0 grid
+  let x0html='<div class="x0-grid">';
+  for (let i=0;i<N;i++) {
+    const val = prev.x0[i]!==undefined ? prev.x0[i] : '1';
+    x0html += `<div class="x0-item"><label>x[${i}](0)</label><input id="x0_${i}" value="${esc(val)}" placeholder="0"/></div>`;
+  }
+  x0html += '</div>';
+  x0el.innerHTML = x0html;
+
+  for (let i=0;i<N;i++) {
+    const col = PALETTE[i%PALETTE.length];
+    const fv = prev.f[i]!==undefined ? prev.f[i] : '';
+    const uv = prev.u[i]!==undefined ? prev.u[i] : '';
+    eq.innerHTML += `<div class="eq-block">
+      <div class="eq-label"><span class="swatch" style="background:${col}"></span>ẋ[${i}] = f${i}(x,u)</div>
+      <textarea class="teq" id="f${i}" rows="2" placeholder="e.g. -x[${i}]+x[${i>0?i-1:1}]">${esc(fv)}</textarea>
+    </div>`;
+    cl.innerHTML += `<div class="eq-block">
+      <div class="eq-label"><span class="swatch" style="background:${col}"></span>u[${i}](x)</div>
+      <textarea class="teq" id="u${i}" rows="2" placeholder="e.g. -x[${i}]">${esc(uv)}</textarea>
+    </div>`;
+  }
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ── COMPILER ─────────────────────────────────────────────────────────────────
+function buildFn(expr) {
+  if (!expr.trim()) return ()=>0;
+  let e = expr
+    .replace(/\bsin\b/g,'Math.sin').replace(/\bcos\b/g,'Math.cos').replace(/\btan\b/g,'Math.tan')
+    .replace(/\basin\b/g,'Math.asin').replace(/\bacos\b/g,'Math.acos').replace(/\batan\b/g,'Math.atan')
+    .replace(/\bsqrt\b/g,'Math.sqrt').replace(/\babs\b/g,'Math.abs').replace(/\bexp\b/g,'Math.exp')
+    .replace(/\blog\b/g,'Math.log').replace(/\bpow\b/g,'Math.pow').replace(/\bsinh\b/g,'Math.sinh')
+    .replace(/\bcosh\b/g,'Math.cosh').replace(/\bPI\b/g,'Math.PI').replace(/\bE\b/g,'Math.E')
+    .replace(/\^/g,'**');
+  try { return new Function('x','u','"use strict";return('+e+');'); }
+  catch(err){ throw new Error('Parse: '+expr.slice(0,30)); }
+}
+
+// ── SOLVER ───────────────────────────────────────────────────────────────────
+function vecNorm(v){return Math.sqrt(v.reduce((s,x)=>s+x*x,0));}
+
+function solve() {
+  const status=document.getElementById('status');
+  status.textContent=''; status.className='';
+  try {
+    const fns=[], ufns=[];
+    for (let i=0;i<N;i++){
+      fns.push(buildFn(document.getElementById('f'+i).value));
+      ufns.push(buildFn(document.getElementById('u'+i).value));
+    }
+    const t0=parseFloat(document.getElementById('t0').value)||0;
+    const tf=parseFloat(document.getElementById('tf').value)||10;
+    const h =parseFloat(document.getElementById('hStep').value)||0.02;
+    const maxP=parseInt(document.getElementById('plotPts').value)||600;
+
+    let x=Array.from({length:N},(_,i)=>parseFloat(document.getElementById('x0_'+i).value)||0);
+    const tArr=[t0], xArr=[x.slice()];
+    let t=t0;
+    const steps=Math.ceil((tf-t0)/h);
+
+    for (let s=0;s<steps;s++) {
+      const rhs=(xv)=>{
+        const u=ufns.map(uf=>uf(xv,[]));
+        return fns.map(f=>f(xv,u));
+      };
+      const k1=rhs(x);
+      const k2=rhs(x.map((xi,i)=>xi+h/2*k1[i]));
+      const k3=rhs(x.map((xi,i)=>xi+h/2*k2[i]));
+      const k4=rhs(x.map((xi,i)=>xi+h*k3[i]));
+      x=x.map((xi,i)=>xi+h/6*(k1[i]+2*k2[i]+2*k3[i]+k4[i]));
+      t+=h;
+      if(!x.every(isFinite)){status.textContent='⚠ Diverged t='+t.toFixed(3);status.className='err';break;}
+      tArr.push(t); xArr.push(x.slice());
+    }
+
+    const uArr=xArr.map(xs=>{const u=ufns.map(uf=>uf(xs,[]));return u;});
+    const norms=xArr.map(xs=>vecNorm(xs));
+
+    const stride=Math.max(1,Math.floor(tArr.length/maxP));
+    const ts=[],xs=[],us=[],ns=[];
+    for(let i=0;i<tArr.length;i+=stride){ts.push(tArr[i]);xs.push(xArr[i]);us.push(uArr[i]);ns.push(norms[i]);}
+
+    solData={ts,xs,us,ns,n:N};
+    drawAll();
+    showStats(norms,tArr.length);
+    status.textContent='✓ '+tArr.length+' steps · n='+N;
+    status.className='ok';
+  } catch(err){
+    status.textContent='⚠ '+err.message; status.className='err';
+  }
+}
+
+function showStats(norms,steps){
+  const el=document.getElementById('normDisplay');
+  el.style.display='flex';
+  const finalN=norms[norms.length-1], maxN=Math.max(...norms);
+  el.innerHTML=`
+    <div class="norm-item"><div class="norm-key">‖x(T)‖₂</div><div class="norm-val">${finalN.toExponential(3)}</div></div>
+    <div class="norm-item"><div class="norm-key">max ‖x‖₂</div><div class="norm-val">${maxN.toExponential(3)}</div></div>
+    <div class="norm-item"><div class="norm-key">steps</div><div class="norm-val">${steps}</div></div>
+    <div class="norm-item"><div class="norm-key">dim n</div><div class="norm-val">${N}</div></div>
+    <div class="norm-item"><div class="norm-key">stable?</div><div class="norm-val" style="color:${finalN<1e-3?'var(--accent3)':'var(--accent2)'}">${finalN<1e-3?'YES':'CHECK'}</div></div>`;
+}
+
+// ── DRAW ─────────────────────────────────────────────────────────────────────
+function setupCanvas(id){
+  const cv=document.getElementById(id);
+  const W=cv.parentElement.clientWidth;
+  cv.width=W; cv.height=Math.round(W*0.38);
+  return cv;
+}
+function niceStep(range,ticks){
+  if(!range||!isFinite(range))return 1;
+  const raw=range/ticks,mag=Math.pow(10,Math.floor(Math.log10(Math.abs(raw)||1)));
+  const nv=raw/mag;return(nv<1.5?1:nv<3.5?2:nv<7.5?5:10)*mag;
+}
+function fmt(v){if(!isFinite(v))return'∞';if(Math.abs(v)>=1e4||(Math.abs(v)<0.005&&v!==0))return v.toExponential(1);return parseFloat(v.toPrecision(4)).toString();}
+
+function drawTrajectory(canvasId,legendId,ts,data,labelFn){
+  const cv=setupCanvas(canvasId),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,P={t:12,b:34,l:52,r:14};
+  ctx.clearRect(0,0,W,H);
+  const m=data[0].length;
+  let ymin=Infinity,ymax=-Infinity;
+  data.forEach(row=>row.forEach(v=>{if(isFinite(v)){ymin=Math.min(ymin,v);ymax=Math.max(ymax,v);}}));
+  const tmin=ts[0],tmax=ts[ts.length-1];
+  const yp=(ymax-ymin)*0.08||0.5; ymin-=yp; ymax+=yp;
+  const cx=t=>P.l+(t-tmin)/(tmax-tmin)*(W-P.l-P.r);
+  const cy=y=>P.t+(ymax-y)/(ymax-ymin)*(H-P.t-P.b);
+  ctx.strokeStyle='#ffffff07';ctx.lineWidth=1;
+  const sT=niceStep(tmax-tmin,8),sY=niceStep(ymax-ymin,6);
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax+sT*.01;gx+=sT){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=Math.ceil(ymin/sY)*sY;gy<=ymax+sY*.01;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+  ctx.strokeStyle='#ffffff1a';ctx.lineWidth=1;
+  const ay0=Math.max(P.t,Math.min(H-P.b,cy(0)));
+  ctx.beginPath();ctx.moveTo(P.l,ay0);ctx.lineTo(W-P.r,ay0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.fillStyle='#ffffff33';ctx.font='8.5px Share Tech Mono';ctx.textAlign='center';
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax+sT*.01;gx+=sT){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.fillText(fmt(gx),x,H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(ymin/sY)*sY;gy<=ymax+sY*.01;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+  const maxDraw=Math.min(m,PALETTE.length);
+  for(let i=0;i<maxDraw;i++){
+    const col=PALETTE[i%PALETTE.length];
+    ctx.strokeStyle=col;ctx.lineWidth=1.7;ctx.lineJoin='round';
+    ctx.beginPath();let pen=false;
+    ts.forEach((tt,k)=>{const v=data[k][i];if(!isFinite(v)){pen=false;return;}const px=cx(tt),py=cy(v);if(!pen){ctx.moveTo(px,py);pen=true;}else ctx.lineTo(px,py);});
+    ctx.stroke();
+  }
+  const leg=document.getElementById(legendId);leg.innerHTML='';
+  for(let i=0;i<Math.min(m,PALETTE.length);i++){leg.innerHTML+=`<span class="leg-item"><span class="leg-dot" style="background:${PALETTE[i%PALETTE.length]}"></span>${labelFn(i)}</span>`;}
+  if(m>PALETTE.length)leg.innerHTML+=`<span class="leg-item" style="color:var(--muted)">+${m-PALETTE.length} more</span>`;
+}
+
+// ── PHASE PORTRAIT ───────────────────────────────────────────────────────────
+function populatePhaseSelectors(){
+  const sx=document.getElementById('phaseX'),sy=document.getElementById('phaseY');
+  const px=sx.value,py=sy.value;
+  sx.innerHTML='';sy.innerHTML='';
+  for(let i=0;i<N;i++){
+    sx.innerHTML+=`<option value="${i}"${i==0?' selected':''}>x[${i}]</option>`;
+    sy.innerHTML+=`<option value="${i}"${i==1?' selected':''}>x[${i}]</option>`;
+  }
+  if(px!==''&&parseInt(px)<N)sx.value=px;
+  if(py!==''&&parseInt(py)<N)sy.value=py;
+  if(sx.value===sy.value){const xi=parseInt(sx.value);sy.value=xi===N-1?Math.max(0,xi-1):xi+1;}
+}
+
+function redrawPhase(){if(solData&&N>=2)drawPhase(solData.ts,solData.xs,solData.ns);}
+
+function phaseColor(mode,k,total,xs,ns){
+  const t=k/total;
+  if(mode==='time') return `hsl(${180+t*160},100%,58%)`;
+  if(mode==='speed'){
+    const dn=xs[k]&&xs[k-1]?vecNorm(xs[k].map((v,i)=>v-xs[k-1][i])):0;
+    return `hsl(${(1-Math.min(1,dn/0.5))*240},100%,58%)`;
+  }
+  if(mode==='norm'){const mn=Math.max(...ns)||1;return `hsl(${(1-ns[k]/mn)*120},100%,55%)`;}
+  return '#00e5ff';
+}
+function phaseGrad(mode){
+  if(mode==='time') return 'linear-gradient(to right,hsl(180,100%,58%),hsl(340,100%,58%))';
+  if(mode==='speed')return 'linear-gradient(to right,hsl(240,100%,58%),hsl(0,100%,58%))';
+  return 'linear-gradient(to right,hsl(120,100%,55%),hsl(0,100%,55%))';
+}
+
+function drawPhase(ts,xs,ns){
+  if(N<2){document.getElementById('phaseWrap').style.display='none';return;}
+  document.getElementById('phaseWrap').style.display='block';
+  const xi=parseInt(document.getElementById('phaseX').value)||0;
+  const yi=parseInt(document.getElementById('phaseY').value)||1;
+  const mode=document.getElementById('phaseColor').value;
+  const cv=setupCanvas('phaseCanvas'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,P={t:12,b:34,l:52,r:14};
+  ctx.clearRect(0,0,W,H);
+  let xmin=Infinity,xmax=-Infinity,ymin=Infinity,ymax=-Infinity;
+  xs.forEach(r=>{if(isFinite(r[xi])){xmin=Math.min(xmin,r[xi]);xmax=Math.max(xmax,r[xi]);}if(isFinite(r[yi])){ymin=Math.min(ymin,r[yi]);ymax=Math.max(ymax,r[yi]);}});
+  const px=(xmax-xmin)*.08||.5;xmin-=px;xmax+=px;
+  const py2=(ymax-ymin)*.08||.5;ymin-=py2;ymax+=py2;
+  const cx=v=>P.l+(v-xmin)/(xmax-xmin)*(W-P.l-P.r);
+  const cy=v=>P.t+(ymax-v)/(ymax-ymin)*(H-P.t-P.b);
+  ctx.strokeStyle='#ffffff07';ctx.lineWidth=1;
+  const sx=niceStep(xmax-xmin,6),sy=niceStep(ymax-ymin,6);
+  for(let gx=Math.ceil(xmin/sx)*sx;gx<=xmax;gx+=sx){const x=cx(gx);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=Math.ceil(ymin/sy)*sy;gy<=ymax;gy+=sy){const y=cy(gy);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+  ctx.strokeStyle='#ffffff1a';ctx.lineWidth=1;
+  const ay0=Math.max(P.t,Math.min(H-P.b,cy(0)));
+  const ax0=Math.max(P.l,Math.min(W-P.r,cx(0)));
+  ctx.beginPath();ctx.moveTo(P.l,ay0);ctx.lineTo(W-P.r,ay0);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(ax0,P.t);ctx.lineTo(ax0,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+  ctx.fillStyle='#ffffff33';ctx.font='8.5px Share Tech Mono';ctx.textAlign='center';
+  for(let gx=Math.ceil(xmin/sx)*sx;gx<=xmax;gx+=sx){const x=cx(gx);if(x<P.l||x>W-P.r)continue;ctx.fillText(fmt(gx),x,H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=Math.ceil(ymin/sy)*sy;gy<=ymax;gy+=sy){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+  ctx.fillStyle='#ffffff33';ctx.font='8.5px Share Tech Mono';ctx.textAlign='center';
+  ctx.fillText(`x[${xi}]`,W-P.r-18,H-P.b+11);
+  ctx.textAlign='right';ctx.fillText(`x[${yi}]`,P.l-3,P.t+9);
+  const total=xs.length;
+  ctx.lineWidth=1.8;ctx.lineJoin='round';
+  for(let k=1;k<total;k++){
+    if(!isFinite(xs[k][xi])||!isFinite(xs[k][yi]))continue;
+    ctx.strokeStyle=phaseColor(mode,k,total,xs,ns);
+    ctx.globalAlpha=.85;
+    ctx.beginPath();ctx.moveTo(cx(xs[k-1][xi]),cy(xs[k-1][yi]));ctx.lineTo(cx(xs[k][xi]),cy(xs[k][yi]));ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+  ctx.fillStyle='#00e5ff';ctx.beginPath();ctx.arc(cx(xs[0][xi]),cy(xs[0][yi]),5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#ff4081';ctx.beginPath();ctx.arc(cx(xs[total-1][xi]),cy(xs[total-1][yi]),5,0,Math.PI*2);ctx.fill();
+  // gradient legend
+  document.getElementById('phaseGradBar').style.background=phaseGrad(mode);
+  const mn=mode==='time'?fmt(ts[0]):mode==='speed'?'slow':'0';
+  const mx=mode==='time'?fmt(ts[ts.length-1]):mode==='speed'?'fast':fmt(Math.max(...ns));
+  document.getElementById('phaseGradMin').textContent=mn;
+  document.getElementById('phaseGradMax').textContent=mx;
+}
+
+// ── NORM PLOT ────────────────────────────────────────────────────────────────
+function drawNorm(ts,ns){
+  document.getElementById('normWrap').style.display='block';
+  const cv=setupCanvas('normCanvas'),ctx=cv.getContext('2d');
+  const W=cv.width,H=cv.height,P={t:12,b:34,l:52,r:14};
+  ctx.clearRect(0,0,W,H);
+  const tmin=ts[0],tmax=ts[ts.length-1];
+  let ymax=Math.max(...ns.filter(isFinite))||1; ymax*=1.08;
+  const cx=t=>P.l+(t-tmin)/(tmax-tmin)*(W-P.l-P.r);
+  const cy=y=>P.t+(ymax-y)/ymax*(H-P.t-P.b);
+  ctx.strokeStyle='#ffffff07';ctx.lineWidth=1;
+  const sT=niceStep(tmax-tmin,8),sY=niceStep(ymax,5);
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax;gx+=sT){const x=cx(gx);ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,H-P.b);ctx.stroke();}
+  for(let gy=0;gy<=ymax;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(W-P.r,y);ctx.stroke();}
+  ctx.strokeStyle='#ffffff1a';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(P.l,H-P.b);ctx.lineTo(W-P.r,H-P.b);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(P.l,P.t);ctx.lineTo(P.l,H-P.b);ctx.stroke();
+  ctx.fillStyle='#ffffff33';ctx.font='8.5px Share Tech Mono';ctx.textAlign='center';
+  for(let gx=Math.ceil(tmin/sT)*sT;gx<=tmax;gx+=sT){ctx.fillText(fmt(gx),cx(gx),H-P.b+11);}
+  ctx.textAlign='right';
+  for(let gy=0;gy<=ymax;gy+=sY){const y=cy(gy);if(y<P.t||y>H-P.b)continue;ctx.fillText(fmt(gy),P.l-3,y+3);}
+  ctx.strokeStyle='#aaff00';ctx.lineWidth=1.8;ctx.lineJoin='round';
+  ctx.beginPath();let pen=false;
+  ts.forEach((tt,k)=>{const v=ns[k];if(!isFinite(v)){pen=false;return;}const px=cx(tt),py=cy(v);if(!pen){ctx.moveTo(px,py);pen=true;}else ctx.lineTo(px,py);});
+  ctx.stroke();
+}
+
+// ── DRAW ALL ─────────────────────────────────────────────────────────────────
+function drawAll(){
+  if(!solData)return;
+  const{ts,xs,us,ns}=solData;
+  drawTrajectory('stateCanvas','stateLegend',ts,xs,i=>`x[${i}]`);
+  drawTrajectory('ctrlCanvas','ctrlLegend',ts,us,i=>`u[${i}]`);
+  populatePhaseSelectors();
+  drawPhase(ts,xs,ns);
+  drawNorm(ts,ns);
+}
+
+// ── PRESETS ───────────────────────────────────────────────────────────────────
+const PRESETS = {
+  vanderpol:{n:2,f:['x[1]','(1-x[0]*x[0])*x[1]-x[0]'],u:['-0.5*x[0]','0'],x0:[2,0],t0:0,tf:20,h:0.01},
+  pendulum: {n:2,f:['x[1]','-sin(x[0])+u[0]'],u:['-2*x[0]-1.5*x[1]','0'],x0:[3.1,0],t0:0,tf:15,h:0.02},
+  lorenz3:  {n:3,f:['10*(x[1]-x[0])','x[0]*(28-x[2])-x[1]','x[0]*x[1]-2.667*x[2]'],u:['0','0','0'],x0:[1,1,1],t0:0,tf:30,h:0.005},
+  duffing:  {n:2,f:['x[1]','-0.3*x[1]+x[0]-x[0]*x[0]*x[0]+u[0]'],u:['-x[0]-x[1]','0'],x0:[1,0],t0:0,tf:25,h:0.02},
+  rossler3: {n:3,f:['-x[1]-x[2]','x[0]+0.2*x[1]','0.2+x[2]*(x[0]-5.7)'],u:['0','0','0'],x0:[1,1,0],t0:0,tf:40,h:0.005},
+  coupled4: {n:4,
+    f:['-x[0]+x[1]*x[2]','-x[1]+x[0]*x[3]','-x[2]+u[0]','-x[3]+u[1]'],
+    u:['-2*x[2]-x[0]','-2*x[3]-x[1]','0','0'],
+    x0:[2,-1,3,1],t0:0,tf:10,h:0.01},
+  chain6:   {n:6,
+    f:['x[1]','x[2]','x[3]','x[4]','x[5]','-x[0]-2*x[1]-3*x[2]+u[0]'],
+    u:['-x[0]-x[1]-x[2]-x[3]-x[4]-x[5]','0','0','0','0','0'],
+    x0:[5,0,0,0,0,0],t0:0,tf:12,h:0.01},
+};
+
+function loadPreset(key){
+  const p=PRESETS[key];
+  N=p.n;
+  document.getElementById('dimVal').textContent=N;
+  buildStateUI({f:[],u:[],x0:[]});
+  setTimeout(()=>{
+    for(let i=0;i<p.n;i++){
+      document.getElementById('f'+i).value=p.f[i]||'';
+      document.getElementById('u'+i).value=p.u[i]||'';
+      document.getElementById('x0_'+i).value=p.x0[i]!==undefined?p.x0[i]:'1';
+    }
+    document.getElementById('t0').value=p.t0;
+    document.getElementById('tf').value=p.tf;
+    document.getElementById('hStep').value=p.h;
+    solve();
+  },50);
+}
+
+window.addEventListener('resize',()=>{if(solData)drawAll();});
+buildStateUI();
+loadPreset('vanderpol');
+</script>
+</body>
+</html>
