@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>2D Function Plotter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:        #0e0e0e;
+      --surface:   #161616;
+      --border:    #2a2a2a;
+      --accent:    #00e5ff;
+      --accent2:   #ff4081;
+      --accent3:   #aaff00;
+      --text:      #e0e0e0;
+      --muted:     #555;
+      --mono:      'Share Tech Mono', monospace;
+      --sans:      'Rajdhani', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 40px;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-shadow: 0 0 18px #00e5ff55;
+      font-family: var(--mono);
+    }
+
+    .header p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+
+    /* ── Main layout ─────────────────────────────────────────────── */
+    .layout {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 1000px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────────────────── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #00e5ff22;
+      padding-bottom: 6px;
+    }
+
+    /* function rows */
+    .fn-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .fn-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid #fff2;
+    }
+
+    .fn-input {
+      flex: 1;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 6px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .fn-input:focus { border-color: var(--accent); }
+    .fn-input::placeholder { color: var(--muted); }
+
+    .fn-del {
+      background: none;
+      border: none;
+      color: var(--muted);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      transition: color 0.15s;
+    }
+    .fn-del:hover { color: var(--accent2); }
+
+    .add-fn-btn {
+      width: 100%;
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      padding: 7px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+      margin-top: 2px;
+    }
+    .add-fn-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* range controls */
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .range-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+      letter-spacing: 0.1em;
+    }
+
+    .range-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 5px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .range-input:focus { border-color: var(--accent); }
+
+    .plot-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #00e5ff22, #00e5ff11);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 10px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      margin-top: 4px;
+    }
+    .plot-btn:hover {
+      background: linear-gradient(135deg, #00e5ff33, #00e5ff22);
+      box-shadow: 0 0 14px #00e5ff33;
+    }
+
+    /* presets */
+    .preset-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .preset-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    /* status */
+    #status {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent2);
+      min-height: 16px;
+      margin-top: 6px;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Canvas area ─────────────────────────────────────────────── */
+    .canvas-wrap {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+
+    #plotCanvas {
+      display: block;
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: #111;
+      box-shadow: 0 0 40px #00e5ff0d;
+      cursor: crosshair;
+    }
+
+    /* coordinate tooltip */
+    #tooltip {
+      position: absolute;
+      background: #000c;
+      border: 1px solid var(--accent);
+      border-radius: 3px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      padding: 3px 8px;
+      pointer-events: none;
+      display: none;
+      letter-spacing: 0.08em;
+      white-space: nowrap;
+    }
+
+    /* syntax hint */
+    .hint {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      line-height: 1.7;
+      letter-spacing: 0.05em;
+    }
+    .hint span { color: var(--accent3); }
+
+    @media (max-width: 640px) {
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>2D Function Plotter</h1>
+  <p>type any expression · zoom with scroll · drag to pan</p>
+</div>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-title">Functions</div>
+      <div id="fn-list"></div>
+      <button class="add-fn-btn" onclick="addFnRow()">+ add function</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">View Range</div>
+      <div class="range-row">
+        <div>
+          <div class="range-label">X MIN</div>
+          <input class="range-input" id="xmin" value="-10"/>
+        </div>
+        <div>
+          <div class="range-label">X MAX</div>
+          <input class="range-input" id="xmax" value="10"/>
+        </div>
+      </div>
+      <div class="range-row">
+        <div>
+          <div class="range-label">Y MIN</div>
+          <input class="range-input" id="ymin" value="-10"/>
+        </div>
+        <div>
+          <div class="range-label">Y MAX</div>
+          <input class="range-input" id="ymax" value="10"/>
+        </div>
+      </div>
+      <button class="plot-btn" onclick="plot()">▶ Plot</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Presets</div>
+      <div class="preset-list">
+        <button class="preset-btn" onclick="loadPreset('sin(x)')">sin(x)</button>
+        <button class="preset-btn" onclick="loadPreset('cos(x)')">cos(x)</button>
+        <button class="preset-btn" onclick="loadPreset('tan(x)')">tan(x)</button>
+        <button class="preset-btn" onclick="loadPreset('x^2')">x²</button>
+        <button class="preset-btn" onclick="loadPreset('x^3')">x³</button>
+        <button class="preset-btn" onclick="loadPreset('sqrt(x)')">√x</button>
+        <button class="preset-btn" onclick="loadPreset('log(x)')">log(x)</button>
+        <button class="preset-btn" onclick="loadPreset('exp(x)')">eˣ</button>
+        <button class="preset-btn" onclick="loadPreset('1/x')">1/x</button>
+        <button class="preset-btn" onclick="loadPreset('abs(x)')">|x|</button>
+        <button class="preset-btn" onclick="loadPreset('sin(x)/x')">sinc</button>
+        <button class="preset-btn" onclick="loadPreset('floor(x)')">floor</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Syntax</div>
+      <div class="hint">
+        <span>+  −  *  /  ^</span> operators<br>
+        <span>sin cos tan</span><br>
+        <span>asin acos atan</span><br>
+        <span>log log2 log10</span><br>
+        <span>sqrt exp abs</span><br>
+        <span>floor ceil round</span><br>
+        <span>pi  e</span> constants
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Canvas ── -->
+  <div class="canvas-wrap">
+    <canvas id="plotCanvas"></canvas>
+    <div id="tooltip"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── Palette for multiple curves ──────────────────────────────────────────
+  const PALETTE = ['#00e5ff','#ff4081','#aaff00','#ff9800','#e040fb','#00e676','#ffeb3b'];
+
+  // ── Function rows state ──────────────────────────────────────────────────
+  let fnRows = [];   // {id, expr, color}
+  let rowIdCounter = 0;
+
+  function addFnRow(expr = '') {
+    const id = rowIdCounter++;
+    const color = PALETTE[fnRows.length % PALETTE.length];
+    fnRows.push({ id, expr, color });
+    renderFnList();
+    // focus new input
+    setTimeout(() => {
+      const el = document.getElementById('fn-' + id);
+      if (el) el.focus();
+    }, 0);
+  }
+
+  function removeFnRow(id) {
+    fnRows = fnRows.filter(r => r.id !== id);
+    renderFnList();
+    plot();
+  }
+
+  function renderFnList() {
+    const container = document.getElementById('fn-list');
+    container.innerHTML = '';
+    fnRows.forEach(row => {
+      const div = document.createElement('div');
+      div.className = 'fn-row';
+      div.innerHTML = `
+        <div class="fn-color" style="background:${row.color}"></div>
+        <input class="fn-input" id="fn-${row.id}" value="${row.expr}"
+               placeholder="e.g. sin(x)"
+               oninput="updateFnExpr(${row.id}, this.value)"
+               onkeydown="if(event.key==='Enter') plot()"/>
+        <button class="fn-del" onclick="removeFnRow(${row.id})" title="Remove">×</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function updateFnExpr(id, val) {
+    const row = fnRows.find(r => r.id === id);
+    if (row) row.expr = val;
+  }
+
+  // ── Safe math expression evaluator ──────────────────────────────────────
+  function buildFn(expr) {
+    if (!expr.trim()) return null;
+    // replace ^ with ** and common aliases
+    let e = expr
+      .replace(/\^/g, '**')
+      .replace(/\bpi\b/g, 'Math.PI')
+      .replace(/\be\b/g, 'Math.E')
+      .replace(/\bsin\b/g,   'Math.sin')
+      .replace(/\bcos\b/g,   'Math.cos')
+      .replace(/\btan\b/g,   'Math.tan')
+      .replace(/\basin\b/g,  'Math.asin')
+      .replace(/\bacos\b/g,  'Math.acos')
+      .replace(/\batan\b/g,  'Math.atan')
+      .replace(/\bsqrt\b/g,  'Math.sqrt')
+      .replace(/\babs\b/g,   'Math.abs')
+      .replace(/\blog\b/g,   'Math.log')
+      .replace(/\blog2\b/g,  'Math.log2')
+      .replace(/\blog10\b/g, 'Math.log10')
+      .replace(/\bexp\b/g,   'Math.exp')
+      .replace(/\bfloor\b/g, 'Math.floor')
+      .replace(/\bceil\b/g,  'Math.ceil')
+      .replace(/\bround\b/g, 'Math.round');
+    try {
+      return new Function('x', '"use strict"; return (' + e + ');');
+    } catch {
+      return null;
+    }
+  }
+
+  // ── Canvas & view state ──────────────────────────────────────────────────
+  const canvas  = document.getElementById('plotCanvas');
+  const ctx     = canvas.getContext('2d');
+  const tooltip = document.getElementById('tooltip');
+  const status  = document.getElementById('status');
+
+  let view = { xmin: -10, xmax: 10, ymin: -10, ymax: 10 };
+
+  function resize() {
+    const wrap = canvas.parentElement;
+    canvas.width  = wrap.clientWidth;
+    canvas.height = Math.round(wrap.clientWidth * 0.65);
+    plot();
+  }
+
+  // ── Coordinate transforms ────────────────────────────────────────────────
+  function toCanvas(mx, my) {
+    const W = canvas.width, H = canvas.height;
+    return [
+      (mx - view.xmin) / (view.xmax - view.xmin) * W,
+      H - (my - view.ymin) / (view.ymax - view.ymin) * H
+    ];
+  }
+
+  function toMath(cx, cy) {
+    const W = canvas.width, H = canvas.height;
+    return [
+      view.xmin + cx / W * (view.xmax - view.xmin),
+      view.ymin + (H - cy) / H * (view.ymax - view.ymin)
+    ];
+  }
+
+  // ── Draw ─────────────────────────────────────────────────────────────────
+  function plot() {
+    // sync view from inputs
+    const xi = parseFloat(document.getElementById('xmin').value);
+    const xa = parseFloat(document.getElementById('xmax').value);
+    const yi = parseFloat(document.getElementById('ymin').value);
+    const ya = parseFloat(document.getElementById('ymax').value);
+    if (!isNaN(xi)) view.xmin = xi;
+    if (!isNaN(xa)) view.xmax = xa;
+    if (!isNaN(yi)) view.ymin = yi;
+    if (!isNaN(ya)) view.ymax = ya;
+
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    drawGrid();
+    drawAxes();
+
+    let errors = [];
+    fnRows.forEach(row => {
+      if (!row.expr.trim()) return;
+      const fn = buildFn(row.expr);
+      if (!fn) { errors.push(row.expr); return; }
+      drawCurve(fn, row.color, row.expr);
+    });
+
+    status.textContent = errors.length ? '⚠ syntax error: ' + errors.join(', ') : '';
+  }
+
+  function drawGrid() {
+    const W = canvas.width, H = canvas.height;
+    ctx.strokeStyle = '#ffffff08';
+    ctx.lineWidth = 1;
+
+    const stepX = niceStep(view.xmax - view.xmin, 10);
+    const stepY = niceStep(view.ymax - view.ymin, 10);
+
+    for (let gx = Math.ceil(view.xmin / stepX) * stepX; gx <= view.xmax; gx += stepX) {
+      const [cx] = toCanvas(gx, 0);
+      ctx.beginPath(); ctx.moveTo(cx, 0); ctx.lineTo(cx, H); ctx.stroke();
+    }
+    for (let gy = Math.ceil(view.ymin / stepY) * stepY; gy <= view.ymax; gy += stepY) {
+      const [, cy] = toCanvas(0, gy);
+      ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(W, cy); ctx.stroke();
+    }
+
+    // tick labels
+    ctx.fillStyle = '#ffffff33';
+    ctx.font = '10px Share Tech Mono';
+    ctx.textAlign = 'center';
+    const [, ay] = toCanvas(0, 0);
+    const labelY = Math.min(H - 6, Math.max(14, ay + 14));
+    for (let gx = Math.ceil(view.xmin / stepX) * stepX; gx <= view.xmax; gx += stepX) {
+      if (Math.abs(gx) < stepX * 0.01) continue;
+      const [cx] = toCanvas(gx, 0);
+      ctx.fillText(fmt(gx), cx, labelY);
+    }
+    ctx.textAlign = 'right';
+    const [ax] = toCanvas(0, 0);
+    const labelX = Math.min(W - 4, Math.max(28, ax - 4));
+    for (let gy = Math.ceil(view.ymin / stepY) * stepY; gy <= view.ymax; gy += stepY) {
+      if (Math.abs(gy) < stepY * 0.01) continue;
+      const [, cy] = toCanvas(0, gy);
+      ctx.fillText(fmt(gy), labelX, cy + 3);
+    }
+  }
+
+  function drawAxes() {
+    const W = canvas.width, H = canvas.height;
+    const [ax, ay] = toCanvas(0, 0);
+
+    ctx.strokeStyle = '#ffffff33';
+    ctx.lineWidth = 1;
+
+    // x-axis
+    ctx.beginPath();
+    ctx.moveTo(0, Math.max(0, Math.min(H, ay)));
+    ctx.lineTo(W, Math.max(0, Math.min(H, ay)));
+    ctx.stroke();
+
+    // y-axis
+    ctx.beginPath();
+    ctx.moveTo(Math.max(0, Math.min(W, ax)), 0);
+    ctx.lineTo(Math.max(0, Math.min(W, ax)), H);
+    ctx.stroke();
+  }
+
+  function drawCurve(fn, color, label) {
+    const W = canvas.width;
+    const steps = W * 2;
+    const dx = (view.xmax - view.xmin) / steps;
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.shadowColor = color;
+    ctx.shadowBlur = 8;
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+
+    let penDown = false;
+    let prevY = null;
+
+    for (let i = 0; i <= steps; i++) {
+      const mx = view.xmin + i * dx;
+      let my;
+      try { my = fn(mx); } catch { penDown = false; prevY = null; continue; }
+
+      if (!isFinite(my) || isNaN(my)) { penDown = false; prevY = null; continue; }
+
+      // discontinuity guard (e.g. tan)
+      if (prevY !== null && Math.abs(my - prevY) > (view.ymax - view.ymin) * 2) {
+        penDown = false;
+      }
+
+      const [cx, cy] = toCanvas(mx, my);
+
+      if (!penDown) { ctx.moveTo(cx, cy); penDown = true; }
+      else ctx.lineTo(cx, cy);
+
+      prevY = my;
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+
+  // ── Helpers ──────────────────────────────────────────────────────────────
+  function niceStep(range, targetTicks) {
+    const raw = range / targetTicks;
+    const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const norm = raw / mag;
+    let nice = norm < 1.5 ? 1 : norm < 3.5 ? 2 : norm < 7.5 ? 5 : 10;
+    return nice * mag;
+  }
+
+  function fmt(n) {
+    if (Math.abs(n) >= 1e4 || (Math.abs(n) < 0.01 && n !== 0)) return n.toExponential(1);
+    return parseFloat(n.toPrecision(4)).toString();
+  }
+
+  // ── Presets ──────────────────────────────────────────────────────────────
+  function loadPreset(expr) {
+    // put into first empty row or add new
+    const empty = fnRows.find(r => !r.expr.trim());
+    if (empty) {
+      empty.expr = expr;
+      renderFnList();
+    } else {
+      addFnRow(expr);
+      fnRows[fnRows.length - 1].expr = expr;
+      renderFnList();
+    }
+    plot();
+  }
+
+  // ── Pan & Zoom ──────────────────────────────────────────────────────────
+  let dragging = false, dragStart = null, viewAtDrag = null;
+
+  canvas.addEventListener('mousedown', e => {
+    dragging = true;
+    dragStart = [e.offsetX, e.offsetY];
+    viewAtDrag = { ...view };
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if (dragging && dragStart) {
+      const dx = e.offsetX - dragStart[0];
+      const dy = e.offsetY - dragStart[1];
+      const W = canvas.width, H = canvas.height;
+      const mx = dx / W * (viewAtDrag.xmax - viewAtDrag.xmin);
+      const my = dy / H * (viewAtDrag.ymax - viewAtDrag.ymin);
+      view.xmin = viewAtDrag.xmin - mx;
+      view.xmax = viewAtDrag.xmax - mx;
+      view.ymin = viewAtDrag.ymin + my;
+      view.ymax = viewAtDrag.ymax + my;
+      syncInputs();
+      plot();
+    }
+
+    // tooltip
+    const [mx, my] = toMath(e.offsetX, e.offsetY);
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.offsetX + 12) + 'px';
+    tooltip.style.top  = (e.offsetY - 8) + 'px';
+    tooltip.textContent = `x: ${fmt(mx)}  y: ${fmt(my)}`;
+  });
+
+  canvas.addEventListener('mouseup',    () => dragging = false);
+  canvas.addEventListener('mouseleave', () => { dragging = false; tooltip.style.display = 'none'; });
+
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    const factor = e.deltaY > 0 ? 1.15 : 0.87;
+    const [mx, my] = toMath(e.offsetX, e.offsetY);
+    view.xmin = mx + (view.xmin - mx) * factor;
+    view.xmax = mx + (view.xmax - mx) * factor;
+    view.ymin = my + (view.ymin - my) * factor;
+    view.ymax = my + (view.ymax - my) * factor;
+    syncInputs();
+    plot();
+  }, { passive: false });
+
+  // touch pan
+  let lastTouch = null;
+  canvas.addEventListener('touchstart', e => { lastTouch = e.touches[0]; }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (!lastTouch) return;
+    const t = e.touches[0];
+    const dx = t.clientX - lastTouch.clientX;
+    const dy = t.clientY - lastTouch.clientY;
+    const W = canvas.width, H = canvas.height;
+    const mx = dx / W * (view.xmax - view.xmin);
+    const my = dy / H * (view.ymax - view.ymin);
+    view.xmin -= mx; view.xmax -= mx;
+    view.ymin += my; view.ymax += my;
+    syncInputs();
+    plot();
+    lastTouch = t;
+  }, { passive: true });
+
+  function syncInputs() {
+    document.getElementById('xmin').value = fmt(view.xmin);
+    document.getElementById('xmax').value = fmt(view.xmax);
+    document.getElementById('ymin').value = fmt(view.ymin);
+    document.getElementById('ymax').value = fmt(view.ymax);
+  }
+
+  // ── Init ─────────────────────────────────────────────────────────────────
+  window.addEventListener('resize', resize);
+  addFnRow('sin(x)');
+  fnRows[0].expr = 'sin(x)';
+  renderFnList();
+  resize();
+</script>
+</body>
+</html>
