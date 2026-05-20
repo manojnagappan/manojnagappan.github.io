@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Function Plotter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --bg:      #0e0e0e;
+      --surface: #161616;
+      --border:  #2a2a2a;
+      --accent:  #00e5ff;
+      --accent2: #ff4081;
+      --accent3: #aaff00;
+      --text:    #e0e0e0;
+      --muted:   #555;
+      --mono:    'Share Tech Mono', monospace;
+      --sans:    'Rajdhani', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 16px 40px;
+      overflow-x: hidden;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .header h1 {
+      font-size: 1.7rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--accent);
+      text-shadow: 0 0 18px #00e5ff55;
+      font-family: var(--mono);
+    }
+
+    .header p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+      margin-top: 4px;
+    }
+
+    .layout {
+      display: flex;
+      gap: 16px;
+      width: 100%;
+      max-width: 1100px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .panel-title {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      color: var(--accent);
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #00e5ff22;
+      padding-bottom: 6px;
+    }
+
+    .fn-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.2s;
+      margin-bottom: 8px;
+    }
+    .fn-input:focus { border-color: var(--accent); }
+    .fn-input::placeholder { color: var(--muted); }
+
+    .plot-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #00e5ff22, #00e5ff11);
+      border: 1px solid var(--accent);
+      border-radius: 4px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 10px;
+      cursor: pointer;
+      transition: background 0.2s, box-shadow 0.2s;
+      margin-top: 2px;
+    }
+    .plot-btn:hover {
+      background: linear-gradient(135deg, #00e5ff33, #00e5ff22);
+      box-shadow: 0 0 14px #00e5ff33;
+    }
+
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .range-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      margin-bottom: 3px;
+      letter-spacing: 0.1em;
+    }
+
+    .range-input {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 5px 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .range-input:focus { border-color: var(--accent); }
+
+    /* color scheme selector */
+    .scheme-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .scheme-btn {
+      padding: 4px 10px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      background: #0a0a0a;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .scheme-btn:hover, .scheme-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .preset-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preset-btn {
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .preset-btn:hover { border-color: var(--accent3); color: var(--accent3); }
+
+    .hint {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      line-height: 1.7;
+      letter-spacing: 0.05em;
+    }
+    .hint span { color: var(--accent3); }
+
+    #status {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--accent2);
+      min-height: 16px;
+      margin-top: 8px;
+      letter-spacing: 0.05em;
+    }
+
+    /* toggle row */
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .toggle-label {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+    }
+    .toggle {
+      appearance: none;
+      width: 32px;
+      height: 16px;
+      background: #0a0a0a;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .toggle:checked { background: #00e5ff33; border-color: var(--accent); }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      top: 2px; left: 2px;
+      width: 10px; height: 10px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: left 0.2s, background 0.2s;
+    }
+    .toggle:checked::after { left: 18px; background: var(--accent); }
+
+    /* ── Canvas ── */
+    .canvas-wrap {
+      flex: 1;
+      min-width: 300px;
+      position: relative;
+    }
+
+    #threeCanvas {
+      display: block;
+      width: 100% !important;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 0 40px #00e5ff0d;
+    }
+
+    .nav-hint {
+      margin-top: 8px;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-align: center;
+      letter-spacing: 0.08em;
+    }
+
+    @media (max-width: 640px) {
+      .sidebar { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>3D Function Plotter</h1>
+  <p>z = f(x, y) · drag to rotate · scroll to zoom · right-drag to pan</p>
+</div>
+
+<div class="layout">
+
+  <!-- ── Sidebar ── -->
+  <div class="sidebar">
+
+    <div class="panel">
+      <div class="panel-title">Function  z = f(x,y)</div>
+      <input class="fn-input" id="fn-expr" value="sin(sqrt(x^2+y^2))" placeholder="e.g. sin(x)*cos(y)"/>
+      <button class="plot-btn" onclick="plot()">▶ Plot</button>
+      <div id="status"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Range</div>
+      <div class="range-row">
+        <div><div class="range-label">X MIN</div><input class="range-input" id="xmin" value="-6"/></div>
+        <div><div class="range-label">X MAX</div><input class="range-input" id="xmax" value="6"/></div>
+      </div>
+      <div class="range-row">
+        <div><div class="range-label">Y MIN</div><input class="range-input" id="ymin" value="-6"/></div>
+        <div><div class="range-label">Y MAX</div><input class="range-input" id="ymax" value="6"/></div>
+      </div>
+      <div class="range-row">
+        <div><div class="range-label">RESOLUTION</div>
+          <select class="range-input" id="resolution">
+            <option value="40">Low (40)</option>
+            <option value="80" selected>Mid (80)</option>
+            <option value="150">High (150)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Display</div>
+      <div class="toggle-row">
+        <span class="toggle-label">SURFACE</span>
+        <input type="checkbox" class="toggle" id="tog-surface" checked onchange="updateDisplay()"/>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">WIREFRAME</span>
+        <input type="checkbox" class="toggle" id="tog-wire" onchange="updateDisplay()"/>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">AXES</span>
+        <input type="checkbox" class="toggle" id="tog-axes" checked onchange="updateDisplay()"/>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">AUTO ROTATE</span>
+        <input type="checkbox" class="toggle" id="tog-rotate" onchange="updateDisplay()"/>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Color Scheme</div>
+      <div class="scheme-list">
+        <button class="scheme-btn active" onclick="setScheme('plasma',this)">Plasma</button>
+        <button class="scheme-btn" onclick="setScheme('cool',this)">Cool</button>
+        <button class="scheme-btn" onclick="setScheme('fire',this)">Fire</button>
+        <button class="scheme-btn" onclick="setScheme('green',this)">Green</button>
+        <button class="scheme-btn" onclick="setScheme('grey',this)">Grey</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Presets</div>
+      <div class="preset-list">
+        <button class="preset-btn" onclick="loadPreset('sin(sqrt(x^2+y^2))')">Ripple</button>
+        <button class="preset-btn" onclick="loadPreset('sin(x)*cos(y)')">Saddle wave</button>
+        <button class="preset-btn" onclick="loadPreset('x^2-y^2')">Hyperbolic</button>
+        <button class="preset-btn" onclick="loadPreset('sin(x)+sin(y)')">Egg crate</button>
+        <button class="preset-btn" onclick="loadPreset('exp(-(x^2+y^2)/4)')">Gaussian</button>
+        <button class="preset-btn" onclick="loadPreset('(x^2+y^2-4)^2')">Crater</button>
+        <button class="preset-btn" onclick="loadPreset('sin(x*y)')">Twisted</button>
+        <button class="preset-btn" onclick="loadPreset('cos(x)*cos(y)*exp(-(x^2+y^2)/8)')">Damped</button>
+        <button class="preset-btn" onclick="loadPreset('x*y/(x^2+y^2+0.1)')">Monkey saddle</button>
+        <button class="preset-btn" onclick="loadPreset('abs(sin(x)*cos(y))')">Abs waves</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">Syntax</div>
+      <div class="hint">
+        Variables: <span>x  y</span><br>
+        <span>+  −  *  /  ^</span> operators<br>
+        <span>sin cos tan</span><br>
+        <span>asin acos atan</span><br>
+        <span>log log2 log10</span><br>
+        <span>sqrt exp abs</span><br>
+        <span>floor ceil round</span><br>
+        <span>pi  e</span> constants
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Three.js Canvas ── -->
+  <div class="canvas-wrap">
+    <canvas id="threeCanvas"></canvas>
+    <div class="nav-hint">🖱 left-drag rotate · scroll zoom · right-drag pan</div>
+  </div>
+
+</div>
+
+<!-- Three.js r128 from cdnjs -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+// ── Color schemes ─────────────────────────────────────────────────────────
+const SCHEMES = {
+  plasma: t => {
+    // purple → magenta → orange → yellow
+    const r = Math.min(1, 0.05 + 1.5*t);
+    const g = Math.max(0, Math.min(1, 2*t - 0.5));
+    const b = Math.max(0, 1 - 2*t);
+    return new THREE.Color(r, g, b);
+  },
+  cool: t => {
+    return new THREE.Color(t * 0.0 + (1-t)*0.0, t*0.9 + (1-t)*0.1, 1.0);
+  },
+  fire: t => {
+    const r = Math.min(1, t * 2);
+    const g = Math.max(0, t * 2 - 1);
+    const b = 0;
+    return new THREE.Color(r, g, b);
+  },
+  green: t => {
+    return new THREE.Color(0, 0.4 + 0.6*t, 0.2 + 0.3*(1-t));
+  },
+  grey: t => {
+    return new THREE.Color(t * 0.9, t * 0.9, t * 0.9);
+  }
+};
+
+let currentScheme = 'plasma';
+
+function setScheme(name, btn) {
+  currentScheme = name;
+  document.querySelectorAll('.scheme-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  plot();
+}
+
+// ── Expression parser ─────────────────────────────────────────────────────
+function buildFn(expr) {
+  if (!expr.trim()) return null;
+  let e = expr
+    .replace(/\^/g, '**')
+    .replace(/\bpi\b/g, 'Math.PI')
+    .replace(/\be\b/g,  'Math.E')
+    .replace(/\bsin\b/g,   'Math.sin')
+    .replace(/\bcos\b/g,   'Math.cos')
+    .replace(/\btan\b/g,   'Math.tan')
+    .replace(/\basin\b/g,  'Math.asin')
+    .replace(/\bacos\b/g,  'Math.acos')
+    .replace(/\batan\b/g,  'Math.atan')
+    .replace(/\bsqrt\b/g,  'Math.sqrt')
+    .replace(/\babs\b/g,   'Math.abs')
+    .replace(/\blog2\b/g,  'Math.log2')
+    .replace(/\blog10\b/g, 'Math.log10')
+    .replace(/\blog\b/g,   'Math.log')
+    .replace(/\bexp\b/g,   'Math.exp')
+    .replace(/\bfloor\b/g, 'Math.floor')
+    .replace(/\bceil\b/g,  'Math.ceil')
+    .replace(/\bround\b/g, 'Math.round');
+  try {
+    return new Function('x', 'y', '"use strict"; return (' + e + ');');
+  } catch {
+    return null;
+  }
+}
+
+// ── Three.js setup ────────────────────────────────────────────────────────
+const canvas = document.getElementById('threeCanvas');
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setClearColor(0x111111, 1);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x111111, 0.04);
+
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+camera.position.set(12, 10, 12);
+camera.lookAt(0, 0, 0);
+
+// Lights
+const ambient = new THREE.AmbientLight(0xffffff, 0.4);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0x00e5ff, 0.8);
+dirLight.position.set(10, 20, 10);
+scene.add(dirLight);
+const dirLight2 = new THREE.DirectionalLight(0xff4081, 0.4);
+dirLight2.position.set(-10, -5, -10);
+scene.add(dirLight2);
+
+// Axes helper (custom colored)
+let axesGroup = null;
+function buildAxes(size) {
+  if (axesGroup) scene.remove(axesGroup);
+  axesGroup = new THREE.Group();
+  const mkLine = (from, to, color) => {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...from), new THREE.Vector3(...to)
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color });
+    axesGroup.add(new THREE.Line(geo, mat));
+  };
+  mkLine([-size,0,0],[size,0,0], 0xff4444);
+  mkLine([0,-size,0],[0,size,0], 0x44ff44);
+  mkLine([0,0,-size],[0,0,size], 0x4444ff);
+  scene.add(axesGroup);
+}
+
+// Mesh holders
+let surfaceMesh = null, wireMesh = null;
+
+// ── Plot ─────────────────────────────────────────────────────────────────
+function plot() {
+  const expr = document.getElementById('fn-expr').value;
+  const fn   = buildFn(expr);
+  const status = document.getElementById('status');
+
+  if (!fn) {
+    status.textContent = '⚠ syntax error in expression';
+    return;
+  }
+  status.textContent = '';
+
+  const xmin = parseFloat(document.getElementById('xmin').value) || -6;
+  const xmax = parseFloat(document.getElementById('xmax').value) ||  6;
+  const ymin = parseFloat(document.getElementById('ymin').value) || -6;
+  const ymax = parseFloat(document.getElementById('ymax').value) ||  6;
+  const N    = parseInt(document.getElementById('resolution').value) || 80;
+
+  // Remove old meshes
+  if (surfaceMesh) { scene.remove(surfaceMesh); surfaceMesh.geometry.dispose(); surfaceMesh.material.dispose(); }
+  if (wireMesh)    { scene.remove(wireMesh);    wireMesh.geometry.dispose();    wireMesh.material.dispose(); }
+
+  // Build geometry
+  const geo = new THREE.BufferGeometry();
+  const positions = [];
+  const colors    = [];
+  const indices   = [];
+
+  // Sample grid
+  const grid = [];
+  let zMin = Infinity, zMax = -Infinity;
+
+  for (let j = 0; j <= N; j++) {
+    grid.push([]);
+    for (let i = 0; i <= N; i++) {
+      const mx = xmin + (xmax - xmin) * i / N;
+      const my = ymin + (ymax - ymin) * j / N;
+      let mz;
+      try { mz = fn(mx, my); } catch { mz = NaN; }
+      if (!isFinite(mz)) mz = NaN;
+      grid[j].push(mz);
+      if (!isNaN(mz)) { zMin = Math.min(zMin, mz); zMax = Math.max(zMax, mz); }
+    }
+  }
+
+  const zRange = zMax - zMin || 1;
+  const colorFn = SCHEMES[currentScheme] || SCHEMES.plasma;
+
+  // Fill buffers
+  for (let j = 0; j <= N; j++) {
+    for (let i = 0; i <= N; i++) {
+      const mx = xmin + (xmax - xmin) * i / N;
+      const my = ymin + (ymax - ymin) * j / N;
+      const mz = grid[j][i];
+      positions.push(mx, isNaN(mz) ? 0 : mz, my);  // three.js: Y up, Z into screen
+      const t  = isNaN(mz) ? 0 : (mz - zMin) / zRange;
+      const c  = colorFn(Math.max(0, Math.min(1, t)));
+      colors.push(c.r, c.g, c.b);
+    }
+  }
+
+  // Triangles
+  for (let j = 0; j < N; j++) {
+    for (let i = 0; i < N; i++) {
+      const a = j * (N+1) + i;
+      const b = a + 1;
+      const c = a + (N+1);
+      const d = c + 1;
+      // skip if any vertex is NaN
+      const zs = [grid[j][i], grid[j][i+1], grid[j+1][i], grid[j+1][i+1]];
+      if (zs.some(isNaN)) continue;
+      indices.push(a, c, b);
+      indices.push(b, c, d);
+    }
+  }
+
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute('color',    new THREE.Float32BufferAttribute(colors,    3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshPhongMaterial({
+    vertexColors: true,
+    side: THREE.DoubleSide,
+    shininess: 60,
+    transparent: true,
+    opacity: 0.92,
+  });
+
+  surfaceMesh = new THREE.Mesh(geo, mat);
+  scene.add(surfaceMesh);
+
+  // Wireframe
+  const wireMat = new THREE.MeshBasicMaterial({
+    color: 0x00e5ff,
+    wireframe: true,
+    transparent: true,
+    opacity: 0.08,
+  });
+  wireMesh = new THREE.Mesh(geo.clone(), wireMat);
+  scene.add(wireMesh);
+
+  const axSize = Math.max(xmax - xmin, ymax - ymin) * 0.6;
+  buildAxes(axSize);
+
+  updateDisplay();
+}
+
+function updateDisplay() {
+  if (surfaceMesh) surfaceMesh.visible = document.getElementById('tog-surface').checked;
+  if (wireMesh)    wireMesh.visible    = document.getElementById('tog-wire').checked;
+  if (axesGroup)   axesGroup.visible   = document.getElementById('tog-axes').checked;
+}
+
+// ── Preset loader ────────────────────────────────────────────────────────
+function loadPreset(expr) {
+  document.getElementById('fn-expr').value = expr;
+  plot();
+}
+
+// ── OrbitControls (manual, lightweight) ─────────────────────────────────
+let isDragging   = false;
+let isRightDrag  = false;
+let lastMouse    = { x: 0, y: 0 };
+let spherical    = { theta: Math.PI/4, phi: Math.PI/3, r: 22 };
+let panOffset    = new THREE.Vector3(0, 0, 0);
+
+function updateCamera() {
+  const x = spherical.r * Math.sin(spherical.phi) * Math.sin(spherical.theta);
+  const y = spherical.r * Math.cos(spherical.phi);
+  const z = spherical.r * Math.sin(spherical.phi) * Math.cos(spherical.theta);
+  camera.position.set(x + panOffset.x, y + panOffset.y, z + panOffset.z);
+  camera.lookAt(panOffset);
+}
+
+canvas.addEventListener('mousedown', e => {
+  isDragging  = true;
+  isRightDrag = e.button === 2;
+  lastMouse   = { x: e.clientX, y: e.clientY };
+  e.preventDefault();
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.clientX - lastMouse.x;
+  const dy = e.clientY - lastMouse.y;
+  lastMouse = { x: e.clientX, y: e.clientY };
+
+  if (isRightDrag) {
+    // pan
+    const right  = new THREE.Vector3();
+    const up     = new THREE.Vector3(0,1,0);
+    right.crossVectors(camera.position.clone().sub(panOffset), up).normalize();
+    const panSpeed = spherical.r * 0.001;
+    panOffset.addScaledVector(right, -dx * panSpeed);
+    panOffset.addScaledVector(up,    dy * panSpeed);
+  } else {
+    // rotate
+    spherical.theta -= dx * 0.008;
+    spherical.phi    = Math.max(0.05, Math.min(Math.PI - 0.05, spherical.phi - dy * 0.008));
+  }
+  updateCamera();
+});
+
+window.addEventListener('mouseup',   () => isDragging = false);
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('wheel', e => {
+  spherical.r = Math.max(2, Math.min(100, spherical.r + e.deltaY * 0.05));
+  updateCamera();
+  e.preventDefault();
+}, { passive: false });
+
+// touch
+let lastTouches = [];
+canvas.addEventListener('touchstart', e => {
+  lastTouches = Array.from(e.touches);
+  isDragging = true;
+}, { passive: true });
+
+canvas.addEventListener('touchmove', e => {
+  if (e.touches.length === 1 && lastTouches.length === 1) {
+    const dx = e.touches[0].clientX - lastTouches[0].clientX;
+    const dy = e.touches[0].clientY - lastTouches[0].clientY;
+    spherical.theta -= dx * 0.008;
+    spherical.phi    = Math.max(0.05, Math.min(Math.PI - 0.05, spherical.phi - dy * 0.008));
+    updateCamera();
+  } else if (e.touches.length === 2 && lastTouches.length === 2) {
+    const d0 = Math.hypot(lastTouches[0].clientX - lastTouches[1].clientX,
+                           lastTouches[0].clientY - lastTouches[1].clientY);
+    const d1 = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                           e.touches[0].clientY - e.touches[1].clientY);
+    spherical.r = Math.max(2, Math.min(100, spherical.r * (d0 / d1)));
+    updateCamera();
+  }
+  lastTouches = Array.from(e.touches);
+}, { passive: true });
+
+canvas.addEventListener('touchend', () => isDragging = false, { passive: true });
+
+// ── Resize ───────────────────────────────────────────────────────────────
+function resize() {
+  const wrap = canvas.parentElement;
+  const w = wrap.clientWidth;
+  const h = Math.round(w * 0.68);
+  renderer.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+}
+
+window.addEventListener('resize', () => { resize(); });
+
+// ── Render loop ───────────────────────────────────────────────────────────
+let autoRotate = false;
+function animate() {
+  requestAnimationFrame(animate);
+  autoRotate = document.getElementById('tog-rotate').checked;
+  if (autoRotate) {
+    spherical.theta += 0.005;
+    updateCamera();
+  }
+  renderer.render(scene, camera);
+}
+
+// ── Keyboard shortcut ─────────────────────────────────────────────────────
+document.getElementById('fn-expr').addEventListener('keydown', e => {
+  if (e.key === 'Enter') plot();
+});
+
+// ── Init ─────────────────────────────────────────────────────────────────
+resize();
+updateCamera();
+plot();
+animate();
+</script>
+</body>
+</html>
