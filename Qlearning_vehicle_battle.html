@@ -6,7 +6,15 @@
 <title>Q-Learning Vehicle Battle</title>
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600&display=swap');
+
+:root{
+  --bg:#050505;
+  --panel:#111;
+  --accent:#00e5ff;
+  --green:#00ff88;
+  --border:#2a2a2a;
+}
 
 *{
   margin:0;
@@ -15,8 +23,8 @@
 }
 
 body{
-  background:#050505;
-  color:#00ff88;
+  background:var(--bg);
+  color:var(--green);
   font-family:'Share Tech Mono', monospace;
   display:flex;
   flex-direction:column;
@@ -76,8 +84,8 @@ span{
 .panel{
   position:fixed;
   top:0;
-  right:-420px;
-  width:420px;
+  right:-440px;
+  width:440px;
   height:100%;
   background:#0d0d0d;
   border-left:1px solid #00ff8844;
@@ -105,7 +113,7 @@ span{
 .panel p,
 .panel li{
   color:#bbbbbb;
-  line-height:1.6;
+  line-height:1.7;
   font-size:0.85rem;
 }
 
@@ -129,6 +137,282 @@ span{
   color:#888;
   font-size:0.72rem;
   text-align:center;
+}
+
+/* =========================================================
+   GRAPH BUTTON
+========================================================= */
+
+#graphToggleBtn{
+
+  position:fixed;
+
+  left:18px;
+  top:18px;
+
+  z-index:999;
+
+  background:linear-gradient(
+    135deg,
+    #00e5ff22,
+    #00e5ff11
+  );
+
+  border:1px solid #00e5ff66;
+
+  color:#00e5ff;
+
+  padding:10px 14px;
+
+  border-radius:6px;
+
+  cursor:pointer;
+
+  font-family:'Share Tech Mono', monospace;
+
+  letter-spacing:0.12em;
+
+  font-size:0.72rem;
+
+  transition:0.25s;
+
+  box-shadow:
+    0 0 20px #00e5ff11;
+
+}
+
+#graphToggleBtn:hover{
+
+  box-shadow:
+    0 0 25px #00e5ff44;
+
+  transform:translateY(-2px);
+
+}
+
+/* =========================================================
+   OVERLAY
+========================================================= */
+
+#graphOverlay{
+
+  position:fixed;
+
+  inset:0;
+
+  background:rgba(0,0,0,0.35);
+
+  backdrop-filter:blur(12px);
+
+  z-index:2000;
+
+  display:none;
+
+  justify-content:center;
+
+  align-items:center;
+
+  animation:fadeIn 0.25s ease;
+
+}
+
+@keyframes fadeIn{
+
+  from{
+    opacity:0;
+  }
+
+  to{
+    opacity:1;
+  }
+
+}
+
+/* =========================================================
+   PANEL
+========================================================= */
+
+#graphPanel{
+
+  width:min(1100px,94vw);
+
+  height:min(760px,92vh);
+
+  background:#111111ee;
+
+  border:1px solid #00e5ff22;
+
+  border-radius:12px;
+
+  padding:22px;
+
+  box-shadow:
+    0 0 60px #00e5ff22,
+    inset 0 0 40px #00e5ff08;
+
+  display:flex;
+
+  flex-direction:column;
+
+}
+
+#graphHeader{
+
+  display:flex;
+
+  justify-content:space-between;
+
+  align-items:center;
+
+}
+
+#graphTitle{
+
+  font-family:'Share Tech Mono', monospace;
+
+  color:#00e5ff;
+
+  font-size:1.2rem;
+
+  letter-spacing:0.25em;
+
+  text-shadow:
+    0 0 16px #00e5ff44;
+
+}
+
+#closeGraphBtn{
+
+  background:none;
+
+  border:none;
+
+  color:#00e5ff;
+
+  font-size:1.3rem;
+
+  cursor:pointer;
+
+}
+
+#graphSub{
+
+  margin-top:6px;
+
+  color:#777;
+
+  letter-spacing:0.12em;
+
+  font-size:0.72rem;
+
+}
+
+.graphStats{
+
+  display:grid;
+
+  grid-template-columns:
+    repeat(auto-fit,minmax(180px,1fr));
+
+  gap:14px;
+
+  margin-top:22px;
+
+}
+
+.statCard{
+
+  background:#161616;
+
+  border:1px solid #2a2a2a;
+
+  border-radius:8px;
+
+  padding:16px;
+
+  box-shadow:
+    inset 0 0 20px #00e5ff08;
+
+}
+
+.statLabel{
+
+  color:#666;
+
+  font-size:0.7rem;
+
+  letter-spacing:0.15em;
+
+}
+
+.statValue{
+
+  color:#00e5ff;
+
+  font-family:'Share Tech Mono', monospace;
+
+  font-size:1.5rem;
+
+  margin-top:8px;
+
+  text-shadow:
+    0 0 14px #00e5ff33;
+
+}
+
+.canvasContainer{
+
+  flex:1;
+
+  margin-top:22px;
+
+  background:#0d0d0d;
+
+  border-radius:10px;
+
+  border:1px solid #222;
+
+  overflow:hidden;
+
+  position:relative;
+
+}
+
+#qChart{
+
+  width:100%;
+
+  height:100%;
+
+  display:block;
+
+}
+
+#tooltip{
+
+  position:absolute;
+
+  background:#000000ee;
+
+  border:1px solid #00e5ff;
+
+  color:#00e5ff;
+
+  padding:8px 10px;
+
+  border-radius:8px;
+
+  font-size:12px;
+
+  pointer-events:none;
+
+  display:none;
+
+  z-index:9999;
+
+  box-shadow:
+    0 0 20px #00e5ff33;
+
 }
 </style>
 </head>
@@ -174,6 +458,7 @@ span{
 </div>
 
 <!-- HELP PANEL -->
+
 <div class="panel" id="helpPanel">
 
 <button class="closeBtn" onclick="togglePanel()">✕</button>
@@ -181,16 +466,16 @@ span{
 <h2>Q-LEARNING VEHICLE BATTLE</h2>
 
 <p>
-This simulation demonstrates a simple reinforcement learning system where an AI-controlled red vehicle learns to hunt the player using Q-learning.
+This simulation demonstrates a reinforcement learning system where the RED vehicle learns to chase and attack the GREEN player using Q-learning.
 </p>
 
 <h3>OBJECTIVE</h3>
 
 <ul>
-<li>The RED vehicle is the AI agent.</li>
-<li>The GREEN vehicle is the player.</li>
-<li>If the AI shoots the player before the timer ends → AI wins.</li>
-<li>If the player survives until time expires → Player wins.</li>
+<li>RED vehicle = AI agent.</li>
+<li>GREEN vehicle = human player.</li>
+<li>If AI shoots player before timer ends → AI wins.</li>
+<li>If player survives until timer reaches zero → Player wins.</li>
 </ul>
 
 <h3>PLAYER CONTROLS</h3>
@@ -205,29 +490,156 @@ This simulation demonstrates a simple reinforcement learning system where an AI-
 <h3>HOW THE AI LEARNS</h3>
 
 <p>
-The AI uses Q-learning. It stores values for actions in different states and updates them after every interaction.
+The AI uses a Q-table where each state stores values for multiple actions.
 </p>
 
 <p>
-Positive rewards increase behaviors that help the AI win.
-Negative rewards discourage poor actions.
+The state is based on:
+</p>
+
+<ul>
+<li>Relative X direction</li>
+<li>Relative Y direction</li>
+<li>Distance bucket</li>
+</ul>
+
+<p>
+The agent learns which actions are best for each state using rewards and penalties.
+</p>
+
+<h3>Q-TABLE ANALYTICS</h3>
+
+<ul>
+<li>STATE INDEX axis = all learned state-action entries.</li>
+<li>Q VALUE axis = learned reward score.</li>
+<li>TOTAL STATES = number of unique environment states learned.</li>
+<li>TOTAL ACTIONS = actions available to the AI.</li>
+<li>MAX Q VALUE = strongest learned behavior.</li>
+<li>MIN Q VALUE = worst learned behavior.</li>
+<li>Hover graph points to see exact X/Y values.</li>
+</ul>
+
+<h3>WHY THERE ARE MANY GRAPH POINTS</h3>
+
+<p>
+The game has around 27 possible states from combinations of:
+</p>
+
+<ul>
+<li>3 X-directions</li>
+<li>3 Y-directions</li>
+<li>3 distance ranges</li>
+</ul>
+
+<p>
+But every state stores multiple actions:
+</p>
+
+<ul>
+<li>LEFT</li>
+<li>RIGHT</li>
+<li>FORWARD</li>
+<li>BACKWARD</li>
+<li>SHOOT</li>
+</ul>
+
+<p>
+So graph points = STATES × ACTIONS.
+Example:
+27 states × 5 actions = 135 possible Q-values.
 </p>
 
 <h3>Q-TABLE MEMORY</h3>
 
 <p>
 The AI memory is stored locally inside your browser using localStorage.
-Refreshing the page will keep the learned data unless you clear the browser storage or press RESET AI.
+Refreshing the page keeps the learned memory unless RESET AI is pressed.
 </p>
 
 <h3>NOTES</h3>
 
 <ul>
-<li>The AI starts dumb and improves over time.</li>
-<li>Learning persists only on your browser/device.</li>
-<li>No server or backend is used.</li>
-<li>The AI state-space is intentionally small for fast learning.</li>
+<li>No backend or server is used.</li>
+<li>The AI learns progressively over time.</li>
+<li>Learning only exists on your browser/device.</li>
+<li>The graph updates live while open.</li>
 </ul>
+
+</div>
+
+<button id="graphToggleBtn">
+Q-TABLE ANALYTICS
+</button>
+
+<div id="graphOverlay">
+
+  <div id="graphPanel">
+
+    <div id="graphHeader">
+
+      <div id="graphTitle">
+        Q-LEARNING ANALYTICS
+      </div>
+
+      <button id="closeGraphBtn">
+        ✕
+      </button>
+
+    </div>
+
+    <div id="graphSub">
+      REAL-TIME Q-TABLE VISUALIZATION
+    </div>
+
+    <div class="graphStats">
+
+      <div class="statCard">
+        <div class="statLabel">
+          TOTAL STATES
+        </div>
+        <div class="statValue" id="totalStatesGraph">
+          0
+        </div>
+      </div>
+
+      <div class="statCard">
+        <div class="statLabel">
+          TOTAL ACTIONS
+        </div>
+        <div class="statValue" id="totalActionsGraph">
+          5
+        </div>
+      </div>
+
+      <div class="statCard">
+        <div class="statLabel">
+          MAX Q VALUE
+        </div>
+        <div class="statValue" id="maxQGraph">
+          0
+        </div>
+      </div>
+
+      <div class="statCard">
+        <div class="statLabel">
+          MIN Q VALUE
+        </div>
+        <div class="statValue" id="minQGraph">
+          0
+        </div>
+      </div>
+
+    </div>
+
+    <div class="canvasContainer">
+
+      <canvas id="qChart"></canvas>
+
+      <div id="tooltip"></div>
+
+    </div>
+
+  </div>
 
 </div>
 
@@ -413,9 +825,9 @@ function resetPositions(){
 
 }
 
-/* =========================
-      Q LEARNING
-========================= */
+/* =====================================================
+   Q LEARNING
+===================================================== */
 
 const ACTIONS = [
 
@@ -567,9 +979,9 @@ function resetAI(){
 
 }
 
-/* =========================
-      DRAW
-========================= */
+/* =====================================================
+   DRAW
+===================================================== */
 
 function drawGrid(){
 
@@ -621,8 +1033,6 @@ function drawCar(car){
     CAR_H
   );
 
-  /* windshield */
-
   ctx.fillStyle = "#111";
 
   ctx.fillRect(
@@ -632,8 +1042,6 @@ function drawCar(car){
     14
   );
 
-  /* gun */
-
   ctx.fillStyle = "#ccc";
 
   ctx.fillRect(
@@ -642,8 +1050,6 @@ function drawCar(car){
     30,
     6
   );
-
-  /* turret */
 
   ctx.beginPath();
 
@@ -670,34 +1076,26 @@ function drawRadar(){
 
 }
 
-/* =========================
-      PLAYER
-========================= */
+/* =====================================================
+   PLAYER
+===================================================== */
 
 function movePlayer(dt){
 
   if(keys.ArrowLeft){
-
     player.angle += 180*dt;
-
   }
 
   if(keys.ArrowRight){
-
     player.angle -= 180*dt;
-
   }
 
   if(keys.ArrowUp){
-
     player.speed += 7*dt;
-
   }
 
   if(keys.ArrowDown){
-
     player.speed -= 7*dt;
-
   }
 
   player.speed *= Math.pow(0.985,60*dt);
@@ -715,9 +1113,9 @@ function movePlayer(dt){
 
 }
 
-/* =========================
-      SHOOTING
-========================= */
+/* =====================================================
+   SHOOTING
+===================================================== */
 
 let shootCooldown = 0;
 
@@ -798,9 +1196,9 @@ function drawBullets(){
 
 }
 
-/* =========================
-      AGENT
-========================= */
+/* =====================================================
+   AGENT
+===================================================== */
 
 function moveAgent(dt){
 
@@ -815,27 +1213,19 @@ function moveAgent(dt){
   let reward = -0.01;
 
   if(action === "LEFT"){
-
     agent.angle += 180*dt;
-
   }
 
   if(action === "RIGHT"){
-
     agent.angle -= 180*dt;
-
   }
 
   if(action === "FORWARD"){
-
     agent.speed += 7*dt;
-
   }
 
   if(action === "BACKWARD"){
-
     agent.speed -= 7*dt;
-
   }
 
   if(action === "SHOOT"){
@@ -849,8 +1239,6 @@ function moveAgent(dt){
     }
 
   }
-
-  /* auto aiming */
 
   const targetAngle =
 
@@ -894,9 +1282,9 @@ function moveAgent(dt){
 
 }
 
-/* =========================
-      GAME
-========================= */
+/* =====================================================
+   GAME
+===================================================== */
 
 function endRound(agentWon){
 
@@ -911,7 +1299,7 @@ function endRound(agentWon){
     agentWinsEl.textContent =
       agentWins;
 
-    updateQ(20,getState());
+    updateQ(8,getState());
 
   }
   else{
@@ -921,7 +1309,7 @@ function endRound(agentWon){
     playerWinsEl.textContent =
       playerWins;
 
-    updateQ(-20,getState());
+    updateQ(-8,getState());
 
   }
 
@@ -979,8 +1367,6 @@ function loop(now){
 
   updateBullets();
 
-  /* DRAW */
-
   ctx.fillStyle = "#111";
 
   ctx.fillRect(0,0,W,H);
@@ -1002,6 +1388,532 @@ function loop(now){
 resetPositions();
 
 requestAnimationFrame(loop);
+
+/* =====================================================
+   GRAPH SYSTEM
+===================================================== */
+
+const graphOverlay =
+document.getElementById(
+  "graphOverlay"
+);
+
+const graphBtn =
+document.getElementById(
+  "graphToggleBtn"
+);
+
+const closeGraphBtn =
+document.getElementById(
+  "closeGraphBtn"
+);
+
+const qCanvas =
+document.getElementById(
+  "qChart"
+);
+
+const qctx =
+qCanvas.getContext("2d");
+
+const tooltip =
+document.getElementById(
+  "tooltip"
+);
+
+graphBtn.onclick = ()=>{
+
+  graphOverlay.style.display =
+    "flex";
+
+  resizeGraph();
+
+  drawQGraph();
+
+};
+
+closeGraphBtn.onclick = ()=>{
+
+  graphOverlay.style.display =
+    "none";
+
+};
+
+graphOverlay.addEventListener(
+  "click",
+  (e)=>{
+
+    if(e.target === graphOverlay){
+
+      graphOverlay.style.display =
+        "none";
+
+    }
+
+  }
+);
+
+function resizeGraph(){
+
+  qCanvas.width =
+    qCanvas.clientWidth;
+
+  qCanvas.height =
+    qCanvas.clientHeight;
+
+}
+
+let graphPoints = [];
+
+function drawQGraph(){
+
+  resizeGraph();
+
+  const W = qCanvas.width;
+  const H = qCanvas.height;
+
+  qctx.clearRect(0,0,W,H);
+
+  const bg =
+    qctx.createLinearGradient(
+      0,0,0,H
+    );
+
+  bg.addColorStop(0,"#121212");
+  bg.addColorStop(1,"#080808");
+
+  qctx.fillStyle = bg;
+
+  qctx.fillRect(0,0,W,H);
+
+  const LEFT   = 80;
+  const RIGHT  = 40;
+  const TOP    = 50;
+  const BOTTOM = 70;
+
+  const graphW = W - LEFT - RIGHT;
+  const graphH = H - TOP - BOTTOM;
+
+  qctx.strokeStyle = "#ffffff08";
+
+  for(let x=0;x<=10;x++){
+
+    const gx =
+      LEFT + (x/10)*graphW;
+
+    qctx.beginPath();
+
+    qctx.moveTo(gx,TOP);
+    qctx.lineTo(gx,H-BOTTOM);
+
+    qctx.stroke();
+
+  }
+
+  for(let y=0;y<=8;y++){
+
+    const gy =
+      TOP + (y/8)*graphH;
+
+    qctx.beginPath();
+
+    qctx.moveTo(LEFT,gy);
+    qctx.lineTo(W-RIGHT,gy);
+
+    qctx.stroke();
+
+  }
+
+  qctx.strokeStyle = "#00e5ff55";
+
+  qctx.lineWidth = 2;
+
+  qctx.beginPath();
+
+  qctx.moveTo(
+    LEFT,
+    H-BOTTOM
+  );
+
+  qctx.lineTo(
+    W-RIGHT,
+    H-BOTTOM
+  );
+
+  qctx.stroke();
+
+  qctx.beginPath();
+
+  qctx.moveTo(
+    LEFT,
+    TOP
+  );
+
+  qctx.lineTo(
+    LEFT,
+    H-BOTTOM
+  );
+
+  qctx.stroke();
+
+  qctx.fillStyle = "#00e5ff";
+
+  qctx.font =
+    "14px Share Tech Mono";
+
+  qctx.textAlign = "center";
+
+  qctx.fillText(
+    "STATE-ACTION INDEX",
+    W/2,
+    H-20
+  );
+
+  qctx.save();
+
+  qctx.translate(25,H/2);
+
+  qctx.rotate(-Math.PI/2);
+
+  qctx.fillText(
+    "Q VALUE",
+    0,
+    0
+  );
+
+  qctx.restore();
+
+  let values = [];
+
+  Object.entries(qTable).forEach(
+    ([state,actions])=>{
+
+      Object.entries(actions).forEach(
+        ([action,v])=>{
+
+          values.push({
+            state,
+            action,
+            value:v
+          });
+
+        }
+      );
+
+    }
+  );
+
+  document.getElementById(
+    "totalStatesGraph"
+  ).textContent =
+    Object.keys(qTable).length;
+
+  document.getElementById(
+    "totalActionsGraph"
+  ).textContent =
+    ACTIONS.length;
+
+  if(values.length === 0){
+
+    document.getElementById(
+      "maxQGraph"
+    ).textContent = 0;
+
+    document.getElementById(
+      "minQGraph"
+    ).textContent = 0;
+
+    qctx.fillStyle =
+      "#00e5ff";
+
+    qctx.font =
+      "20px Share Tech Mono";
+
+    qctx.fillText(
+      "NO Q-TABLE DATA",
+      W/2,
+      H/2
+    );
+
+    return;
+
+  }
+
+  const onlyVals =
+    values.map(v=>v.value);
+
+  const maxQ =
+    Math.max(...onlyVals);
+
+  const minQ =
+    Math.min(...onlyVals);
+
+  document.getElementById(
+    "maxQGraph"
+  ).textContent =
+    maxQ.toFixed(2);
+
+  document.getElementById(
+    "minQGraph"
+  ).textContent =
+    minQ.toFixed(2);
+
+  const range =
+    Math.max(
+      1,
+      maxQ-minQ
+    );
+
+  qctx.fillStyle = "#777";
+
+  qctx.font =
+    "11px Share Tech Mono";
+
+  qctx.textAlign = "right";
+
+  for(let i=0;i<=8;i++){
+
+    const val =
+      maxQ -
+      (i/8)*range;
+
+    const y =
+      TOP +
+      (i/8)*graphH;
+
+    qctx.fillText(
+      val.toFixed(1),
+      LEFT-10,
+      y+4
+    );
+
+  }
+
+  qctx.textAlign = "center";
+
+  for(let i=0;i<=10;i++){
+
+    const x =
+      LEFT +
+      (i/10)*graphW;
+
+    const idx =
+      Math.floor(
+        (i/10)*values.length
+      );
+
+    qctx.fillText(
+      idx,
+      x,
+      H-BOTTOM+20
+    );
+
+  }
+
+  qctx.beginPath();
+
+  graphPoints = [];
+
+  values.forEach((obj,i)=>{
+
+    const x =
+      LEFT +
+      (i/(values.length-1))
+      * graphW;
+
+    const y =
+      TOP +
+      (
+        1 -
+        ((obj.value-minQ)/range)
+      ) * graphH;
+
+    graphPoints.push({
+      x,
+      y,
+      value:obj.value,
+      state:obj.state,
+      action:obj.action,
+      index:i
+    });
+
+    if(i===0){
+
+      qctx.moveTo(x,y);
+
+    }else{
+
+      qctx.lineTo(x,y);
+
+    }
+
+  });
+
+  qctx.strokeStyle =
+    "#00e5ff";
+
+  qctx.lineWidth = 3;
+
+  qctx.shadowColor =
+    "#00e5ff";
+
+  qctx.shadowBlur = 20;
+
+  qctx.stroke();
+
+  qctx.shadowBlur = 0;
+
+  graphPoints.forEach(p=>{
+
+    qctx.beginPath();
+
+    qctx.arc(
+      p.x,
+      p.y,
+      4,
+      0,
+      Math.PI*2
+    );
+
+    qctx.fillStyle =
+      "#00e5ff";
+
+    qctx.fill();
+
+  });
+
+}
+
+qCanvas.addEventListener(
+  "mousemove",
+  (e)=>{
+
+    if(graphPoints.length === 0)
+      return;
+
+    const rect =
+      qCanvas.getBoundingClientRect();
+
+    const mx =
+      e.clientX - rect.left;
+
+    const my =
+      e.clientY - rect.top;
+
+    let nearest = null;
+    let minDist = 999999;
+
+    graphPoints.forEach(p=>{
+
+      const d =
+        Math.hypot(
+          mx-p.x,
+          my-p.y
+        );
+
+      if(d < minDist){
+
+        minDist = d;
+        nearest = p;
+
+      }
+
+    });
+
+    if(nearest && minDist < 20){
+
+      drawQGraph();
+
+      qctx.beginPath();
+
+      qctx.arc(
+        nearest.x,
+        nearest.y,
+        10,
+        0,
+        Math.PI*2
+      );
+
+      qctx.fillStyle =
+        "#ffffff";
+
+      qctx.shadowColor =
+        "#00e5ff";
+
+      qctx.shadowBlur = 25;
+
+      qctx.fill();
+
+      qctx.shadowBlur = 0;
+
+      tooltip.style.display =
+        "block";
+
+      tooltip.style.left =
+        (e.clientX + 15) + "px";
+
+      tooltip.style.top =
+        (e.clientY - 80) + "px";
+
+      tooltip.innerHTML = `
+      X : ${nearest.index}<br>
+      Y : ${nearest.value.toFixed(4)}<br>
+      STATE : ${nearest.state}<br>
+      ACTION : ${nearest.action}
+      `;
+
+    }else{
+
+      tooltip.style.display =
+        "none";
+
+      drawQGraph();
+
+    }
+
+  }
+);
+
+qCanvas.addEventListener(
+  "mouseleave",
+  ()=>{
+
+    tooltip.style.display =
+      "none";
+
+    drawQGraph();
+
+  }
+);
+
+setInterval(()=>{
+
+  if(
+    graphOverlay.style.display ===
+    "flex"
+  ){
+
+    drawQGraph();
+
+  }
+
+},300);
+
+window.addEventListener(
+  "resize",
+  ()=>{
+
+    if(
+      graphOverlay.style.display ===
+      "flex"
+    ){
+
+      drawQGraph();
+
+    }
+
+  }
+);
 
 </script>
 
