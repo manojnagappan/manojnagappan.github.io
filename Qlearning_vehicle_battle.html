@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Q-Learning Vehicle Battle</title>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  background:#050505;
+  color:#00ff88;
+  font-family:'Share Tech Mono', monospace;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  min-height:100vh;
+  overflow:hidden;
+  padding:12px;
+}
+
+h1{
+  margin-bottom:10px;
+  letter-spacing:0.25em;
+  font-size:1rem;
+  text-align:center;
+}
+
+#topBar{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+button, select{
+  background:#111;
+  border:1px solid #00ff8844;
+  color:#00ff88;
+  padding:8px 12px;
+  cursor:pointer;
+  font-family:'Share Tech Mono', monospace;
+}
+
+button:hover{
+  background:#00ff8811;
+}
+
+canvas{
+  background:#111;
+  border:1px solid #00ff8844;
+  box-shadow:0 0 40px #00ff8822;
+}
+
+#hud{
+  margin-top:10px;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:18px;
+  font-size:0.8rem;
+}
+
+span{
+  color:#00ff88;
+}
+
+.panel{
+  position:fixed;
+  top:0;
+  right:-420px;
+  width:420px;
+  height:100%;
+  background:#0d0d0d;
+  border-left:1px solid #00ff8844;
+  transition:0.3s;
+  padding:20px;
+  overflow-y:auto;
+  z-index:1000;
+}
+
+.panel.open{
+  right:0;
+}
+
+.panel h2{
+  margin-bottom:14px;
+  color:#00ff88;
+}
+
+.panel h3{
+  margin-top:18px;
+  margin-bottom:8px;
+  color:#00ffaa;
+}
+
+.panel p,
+.panel li{
+  color:#bbbbbb;
+  line-height:1.6;
+  font-size:0.85rem;
+}
+
+.panel ul{
+  padding-left:20px;
+}
+
+.closeBtn{
+  position:absolute;
+  top:10px;
+  right:10px;
+  font-size:20px;
+  background:none;
+  border:none;
+  color:#00ff88;
+  cursor:pointer;
+}
+
+#status{
+  margin-top:8px;
+  color:#888;
+  font-size:0.72rem;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Q-LEARNING VEHICLE BATTLE</h1>
+
+<div id="topBar">
+
+  <div>
+    TIME:
+    <select id="timeSelect">
+      <option value="30">30 SEC</option>
+      <option value="60" selected>1 MIN</option>
+      <option value="120">2 MIN</option>
+      <option value="300">5 MIN</option>
+    </select>
+  </div>
+
+  <button id="restartBtn">RESTART</button>
+
+  <button onclick="resetAI()">RESET AI</button>
+
+  <button onclick="togglePanel()">ABOUT / HELP</button>
+
+</div>
+
+<canvas id="gameCanvas" width="1000" height="600"></canvas>
+
+<div id="hud">
+  TIMER: <span id="timer">60</span>
+  |
+  AGENT WINS: <span id="agentWins">0</span>
+  |
+  PLAYER WINS: <span id="playerWins">0</span>
+  |
+  Q STATES: <span id="qstates">0</span>
+</div>
+
+<div id="status">
+  ARROW KEYS TO MOVE · RED VEHICLE LEARNS USING Q-LEARNING
+</div>
+
+<!-- HELP PANEL -->
+<div class="panel" id="helpPanel">
+
+<button class="closeBtn" onclick="togglePanel()">✕</button>
+
+<h2>Q-LEARNING VEHICLE BATTLE</h2>
+
+<p>
+This simulation demonstrates a simple reinforcement learning system where an AI-controlled red vehicle learns to hunt the player using Q-learning.
+</p>
+
+<h3>OBJECTIVE</h3>
+
+<ul>
+<li>The RED vehicle is the AI agent.</li>
+<li>The GREEN vehicle is the player.</li>
+<li>If the AI shoots the player before the timer ends → AI wins.</li>
+<li>If the player survives until time expires → Player wins.</li>
+</ul>
+
+<h3>PLAYER CONTROLS</h3>
+
+<ul>
+<li>↑ : Accelerate</li>
+<li>↓ : Reverse</li>
+<li>← : Rotate Left</li>
+<li>→ : Rotate Right</li>
+</ul>
+
+<h3>HOW THE AI LEARNS</h3>
+
+<p>
+The AI uses Q-learning. It stores values for actions in different states and updates them after every interaction.
+</p>
+
+<p>
+Positive rewards increase behaviors that help the AI win.
+Negative rewards discourage poor actions.
+</p>
+
+<h3>Q-TABLE MEMORY</h3>
+
+<p>
+The AI memory is stored locally inside your browser using localStorage.
+Refreshing the page will keep the learned data unless you clear the browser storage or press RESET AI.
+</p>
+
+<h3>NOTES</h3>
+
+<ul>
+<li>The AI starts dumb and improves over time.</li>
+<li>Learning persists only on your browser/device.</li>
+<li>No server or backend is used.</li>
+<li>The AI state-space is intentionally small for fast learning.</li>
+</ul>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+const W = canvas.width;
+const H = canvas.height;
+
+const CAR_W = 60;
+const CAR_H = 30;
+
+const timerEl = document.getElementById("timer");
+const agentWinsEl = document.getElementById("agentWins");
+const playerWinsEl = document.getElementById("playerWins");
+const qstatesEl = document.getElementById("qstates");
+
+const timeSelect = document.getElementById("timeSelect");
+const restartBtn = document.getElementById("restartBtn");
+
+let GAME_TIME = 60;
+
+let agentWins = 0;
+let playerWins = 0;
+
+let roundOver = false;
+
+function togglePanel(){
+  document
+    .getElementById("helpPanel")
+    .classList
+    .toggle("open");
+}
+
+timeSelect.addEventListener("change",()=>{
+
+  GAME_TIME =
+    parseInt(timeSelect.value);
+
+  resetPositions();
+
+});
+
+restartBtn.addEventListener("click",()=>{
+  resetPositions();
+});
+
+const keys = {
+
+  ArrowUp:false,
+  ArrowDown:false,
+  ArrowLeft:false,
+  ArrowRight:false
+
+};
+
+document.addEventListener("keydown",(e)=>{
+
+  if(keys.hasOwnProperty(e.key)){
+
+    e.preventDefault();
+
+    keys[e.key] = true;
+
+  }
+
+});
+
+document.addEventListener("keyup",(e)=>{
+
+  if(keys.hasOwnProperty(e.key)){
+
+    keys[e.key] = false;
+
+  }
+
+});
+
+function rand(min,max){
+  return Math.random()*(max-min)+min;
+}
+
+function dist(x1,y1,x2,y2){
+  return Math.hypot(x2-x1,y2-y1);
+}
+
+function wrap(car){
+
+  if(car.x < -CAR_W) car.x = W+CAR_W;
+  if(car.x > W+CAR_W) car.x = -CAR_W;
+
+  if(car.y < -CAR_H) car.y = H+CAR_H;
+  if(car.y > H+CAR_H) car.y = -CAR_H;
+
+}
+
+class Bullet{
+
+  constructor(x,y,vx,vy,color){
+
+    this.x = x;
+    this.y = y;
+
+    this.vx = vx;
+    this.vy = vy;
+
+    this.life = 120;
+
+    this.color = color;
+
+  }
+
+  update(){
+
+    this.x += this.vx;
+    this.y += this.vy;
+
+    this.life--;
+
+  }
+
+  draw(){
+
+    ctx.beginPath();
+
+    ctx.arc(this.x,this.y,4,0,Math.PI*2);
+
+    ctx.fillStyle = this.color;
+
+    ctx.fill();
+
+  }
+
+}
+
+const bullets = [];
+
+const player = {
+
+  x: rand(100,W-100),
+  y: rand(100,H-100),
+
+  angle:0,
+  speed:0,
+
+  color:"#00ff66"
+
+};
+
+const agent = {
+
+  x: rand(100,W-100),
+  y: rand(100,H-100),
+
+  angle:0,
+  speed:0,
+
+  color:"#ff3333"
+
+};
+
+function resetPositions(){
+
+  player.x = rand(100,W-100);
+  player.y = rand(100,H-100);
+
+  agent.x = rand(100,W-100);
+  agent.y = rand(100,H-100);
+
+  player.angle = rand(0,360);
+  agent.angle = rand(0,360);
+
+  player.speed = 0;
+  agent.speed = 0;
+
+  bullets.length = 0;
+
+  gameStart = performance.now();
+
+  roundOver = false;
+
+}
+
+/* =========================
+      Q LEARNING
+========================= */
+
+const ACTIONS = [
+
+  "LEFT",
+  "RIGHT",
+  "FORWARD",
+  "BACKWARD",
+  "SHOOT"
+
+];
+
+let qTable =
+JSON.parse(localStorage.getItem("qtable")) || {};
+
+const alpha = 0.15;
+const gamma = 0.90;
+const epsilon = 0.15;
+
+let lastState = null;
+let lastAction = null;
+
+function getState(){
+
+  const dx = player.x - agent.x;
+  const dy = player.y - agent.y;
+
+  const d =
+    dist(
+      agent.x,
+      agent.y,
+      player.x,
+      player.y
+    );
+
+  let dirX = 0;
+  let dirY = 0;
+
+  if(dx > 120) dirX = 1;
+  if(dx < -120) dirX = -1;
+
+  if(dy > 120) dirY = 1;
+  if(dy < -120) dirY = -1;
+
+  let distBucket = 0;
+
+  if(d < 150) distBucket = 0;
+  else if(d < 350) distBucket = 1;
+  else distBucket = 2;
+
+  return `${dirX},${dirY},${distBucket}`;
+
+}
+
+function chooseAction(state){
+
+  if(!qTable[state]){
+
+    qTable[state] = {};
+
+    ACTIONS.forEach(a=>{
+      qTable[state][a] = 0;
+    });
+
+  }
+
+  if(Math.random() < epsilon){
+
+    return ACTIONS[
+      Math.floor(
+        Math.random()*ACTIONS.length
+      )
+    ];
+
+  }
+
+  let bestAction = ACTIONS[0];
+  let bestValue =
+    qTable[state][bestAction];
+
+  ACTIONS.forEach(a=>{
+
+    if(qTable[state][a] > bestValue){
+
+      bestValue = qTable[state][a];
+      bestAction = a;
+
+    }
+
+  });
+
+  return bestAction;
+
+}
+
+function updateQ(reward,newState){
+
+  if(lastState === null) return;
+
+  if(!qTable[newState]){
+
+    qTable[newState] = {};
+
+    ACTIONS.forEach(a=>{
+      qTable[newState][a] = 0;
+    });
+
+  }
+
+  const maxFuture =
+    Math.max(
+      ...Object.values(
+        qTable[newState]
+      )
+    );
+
+  const oldQ =
+    qTable[lastState][lastAction];
+
+  const newQ =
+    oldQ +
+    alpha * (
+      reward +
+      gamma*maxFuture -
+      oldQ
+    );
+
+  qTable[lastState][lastAction] =
+    Math.max(
+      -50,
+      Math.min(50,newQ)
+    );
+
+  localStorage.setItem(
+    "qtable",
+    JSON.stringify(qTable)
+  );
+
+}
+
+function resetAI(){
+
+  localStorage.removeItem("qtable");
+
+  qTable = {};
+
+  qstatesEl.textContent = 0;
+
+  alert("AI MEMORY CLEARED");
+
+}
+
+/* =========================
+      DRAW
+========================= */
+
+function drawGrid(){
+
+  ctx.strokeStyle = "#ffffff08";
+
+  for(let x=0;x<W;x+=50){
+
+    ctx.beginPath();
+
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,H);
+
+    ctx.stroke();
+
+  }
+
+  for(let y=0;y<H;y+=50){
+
+    ctx.beginPath();
+
+    ctx.moveTo(0,y);
+    ctx.lineTo(W,y);
+
+    ctx.stroke();
+
+  }
+
+}
+
+function drawCar(car){
+
+  ctx.save();
+
+  ctx.translate(car.x,car.y);
+
+  ctx.rotate(
+    -car.angle*Math.PI/180
+  );
+
+  ctx.shadowBlur = 15;
+  ctx.shadowColor = car.color;
+
+  ctx.fillStyle = car.color;
+
+  ctx.fillRect(
+    -CAR_W/2,
+    -CAR_H/2,
+    CAR_W,
+    CAR_H
+  );
+
+  /* windshield */
+
+  ctx.fillStyle = "#111";
+
+  ctx.fillRect(
+    CAR_W/2-15,
+    -7,
+    15,
+    14
+  );
+
+  /* gun */
+
+  ctx.fillStyle = "#ccc";
+
+  ctx.fillRect(
+    0,
+    -3,
+    30,
+    6
+  );
+
+  /* turret */
+
+  ctx.beginPath();
+
+  ctx.arc(0,0,8,0,Math.PI*2);
+
+  ctx.fillStyle = "#222";
+
+  ctx.fill();
+
+  ctx.restore();
+
+}
+
+function drawRadar(){
+
+  ctx.beginPath();
+
+  ctx.moveTo(agent.x,agent.y);
+  ctx.lineTo(player.x,player.y);
+
+  ctx.strokeStyle = "#ff000022";
+
+  ctx.stroke();
+
+}
+
+/* =========================
+      PLAYER
+========================= */
+
+function movePlayer(dt){
+
+  if(keys.ArrowLeft){
+
+    player.angle += 180*dt;
+
+  }
+
+  if(keys.ArrowRight){
+
+    player.angle -= 180*dt;
+
+  }
+
+  if(keys.ArrowUp){
+
+    player.speed += 7*dt;
+
+  }
+
+  if(keys.ArrowDown){
+
+    player.speed -= 7*dt;
+
+  }
+
+  player.speed *= Math.pow(0.985,60*dt);
+
+  const rad =
+    player.angle*Math.PI/180;
+
+  player.x +=
+    Math.cos(rad)*player.speed;
+
+  player.y -=
+    Math.sin(rad)*player.speed;
+
+  wrap(player);
+
+}
+
+/* =========================
+      SHOOTING
+========================= */
+
+let shootCooldown = 0;
+
+function shoot(car,color){
+
+  const rad =
+    car.angle*Math.PI/180;
+
+  const bulletSpeed = 10;
+
+  bullets.push(
+
+    new Bullet(
+
+      car.x + Math.cos(rad)*30,
+      car.y - Math.sin(rad)*30,
+
+      Math.cos(rad)*bulletSpeed,
+      -Math.sin(rad)*bulletSpeed,
+
+      color
+
+    )
+
+  );
+
+}
+
+function updateBullets(){
+
+  for(let i=bullets.length-1;i>=0;i--){
+
+    const b = bullets[i];
+
+    b.update();
+
+    if(
+      b.x < 0 ||
+      b.x > W ||
+      b.y < 0 ||
+      b.y > H ||
+      b.life <= 0
+    ){
+
+      bullets.splice(i,1);
+
+      continue;
+
+    }
+
+    if(
+      dist(
+        b.x,
+        b.y,
+        player.x,
+        player.y
+      ) < 24 &&
+      b.color === "#ff4444"
+    ){
+
+      bullets.splice(i,1);
+
+      endRound(true);
+
+      continue;
+
+    }
+
+  }
+
+}
+
+function drawBullets(){
+
+  bullets.forEach(b=>{
+    b.draw();
+  });
+
+}
+
+/* =========================
+      AGENT
+========================= */
+
+function moveAgent(dt){
+
+  const state = getState();
+
+  const action =
+    chooseAction(state);
+
+  lastState = state;
+  lastAction = action;
+
+  let reward = -0.01;
+
+  if(action === "LEFT"){
+
+    agent.angle += 180*dt;
+
+  }
+
+  if(action === "RIGHT"){
+
+    agent.angle -= 180*dt;
+
+  }
+
+  if(action === "FORWARD"){
+
+    agent.speed += 7*dt;
+
+  }
+
+  if(action === "BACKWARD"){
+
+    agent.speed -= 7*dt;
+
+  }
+
+  if(action === "SHOOT"){
+
+    if(shootCooldown <= 0){
+
+      shoot(agent,"#ff4444");
+
+      shootCooldown = 0.35;
+
+    }
+
+  }
+
+  /* auto aiming */
+
+  const targetAngle =
+
+    Math.atan2(
+      -(player.y-agent.y),
+      player.x-agent.x
+    ) * 180/Math.PI;
+
+  let diff =
+    targetAngle - agent.angle;
+
+  while(diff > 180) diff -= 360;
+  while(diff < -180) diff += 360;
+
+  agent.angle += diff * 0.03;
+
+  agent.speed *= Math.pow(0.985,60*dt);
+
+  const rad =
+    agent.angle*Math.PI/180;
+
+  agent.x +=
+    Math.cos(rad)*agent.speed;
+
+  agent.y -=
+    Math.sin(rad)*agent.speed;
+
+  wrap(agent);
+
+  const d =
+    dist(
+      agent.x,
+      agent.y,
+      player.x,
+      player.y
+    );
+
+  reward += (500-d)/5000;
+
+  updateQ(reward,getState());
+
+}
+
+/* =========================
+      GAME
+========================= */
+
+function endRound(agentWon){
+
+  if(roundOver) return;
+
+  roundOver = true;
+
+  if(agentWon){
+
+    agentWins++;
+
+    agentWinsEl.textContent =
+      agentWins;
+
+    updateQ(20,getState());
+
+  }
+  else{
+
+    playerWins++;
+
+    playerWinsEl.textContent =
+      playerWins;
+
+    updateQ(-20,getState());
+
+  }
+
+  setTimeout(()=>{
+
+    resetPositions();
+
+  },800);
+
+}
+
+let gameStart = performance.now();
+
+let last = performance.now();
+
+function loop(now){
+
+  const dt =
+    Math.min(
+      (now-last)/1000,
+      0.05
+    );
+
+  last = now;
+
+  const elapsed =
+    (now-gameStart)/1000;
+
+  const remaining =
+    Math.max(
+      0,
+      GAME_TIME-elapsed
+    );
+
+  timerEl.textContent =
+    remaining.toFixed(1);
+
+  qstatesEl.textContent =
+    Object.keys(qTable).length;
+
+  if(
+    remaining <= 0 &&
+    !roundOver
+  ){
+
+    endRound(false);
+
+  }
+
+  shootCooldown -= dt;
+
+  movePlayer(dt);
+
+  moveAgent(dt);
+
+  updateBullets();
+
+  /* DRAW */
+
+  ctx.fillStyle = "#111";
+
+  ctx.fillRect(0,0,W,H);
+
+  drawGrid();
+
+  drawRadar();
+
+  drawCar(player);
+
+  drawCar(agent);
+
+  drawBullets();
+
+  requestAnimationFrame(loop);
+
+}
+
+resetPositions();
+
+requestAnimationFrame(loop);
+
+</script>
+
+</body>
+</html>
