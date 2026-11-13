@@ -1,0 +1,371 @@
+%------------------------------------------------------------------------------
+\documentclass[A4,11pt]{article}
+%\documentclass[letterpaper,11pt]{article} %For use in US
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{verbatim}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage[english]{babel}
+\usepackage{tabularx}
+\usepackage{tikz}
+\input{glyphtounicode}
+\usepackage{booktabs}
+\usepackage{palatino}
+
+\usepackage{multicol} % Add this package to your preamble
+
+
+%--------LOGO------------
+\newcommand*{\GoogleScholarlogosymbol}{\includegraphics[height=.7\baselineskip]{GSlogo}}
+\newcommand*{\ResearchGatelogosymbol}{\includegraphics[height=.7\baselineskip]{RGlogo}}
+\newcommand*{\Scopuslogosymbol}{\includegraphics[height=.7\baselineskip]{SClogo}}
+\newcommand*{\ORCIDlogosymbol}{\includegraphics[height=.7\baselineskip]{ORCIDlogo}}
+
+
+%-----PAGE SETUP---------------------------------------------------------------
+% Adjust margins
+\addtolength{\oddsidemargin}{-1cm}
+\addtolength{\evensidemargin}{-1cm}
+\addtolength{\textwidth}{2cm}
+\addtolength{\topmargin}{-1cm}
+\addtolength{\textheight}{2cm}
+
+\urlstyle{same}
+
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0cm}
+
+%---------Sections formatting------------------------
+\titleformat{\section}{
+  \vspace{-4pt}\scshape\raggedright\large
+}{}{0em}{}[\color{black}\titlerule \vspace{-5pt}]
+
+% Ensure that .pdf is machine readable/ATS parsable
+\pdfgentounicode=1
+
+%-----CUSTOM COMMANDS FOR FORMATTING SECTIONS----------------------------------
+\newcommand{\CVItem}[1]{
+  \item\small{
+    {#1 \vspace{-2pt}}
+  }
+}
+
+\newcommand{\CVSubheading}[4]{
+  \vspace{-2pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & #2 \\
+      \small#3 & \small #4 \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\CVSubSubheading}[2]{
+    \item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \text{\small#1} & \text{\small #2} \\
+    \end{tabular*}\vspace{-7pt}
+}
+
+\newcommand{\CVSubItem}[1]{\CVItem{#1}\vspace{-4pt}}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\CVSubHeadingListStart}{\begin{itemize}[leftmargin=0.5cm, label={}]}
+% \newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]} % Uncomment for US
+\newcommand{\CVSubHeadingListEnd}{\end{itemize}}
+\newcommand{\CVItemListStart}{\begin{itemize}}
+\newcommand{\CVItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+
+%------------------------------------------------------------------------------
+% CV STARTS HERE  %
+%------------------------------------------------------------------------------
+\begin{document}
+
+%\begin{center} \Huge
+%	\underline{\bf Curriculum vitae}
+%\end{center}
+%-----HEADING------------------------------------------------------------------
+\begin{minipage}[c]{0.05\textwidth}
+\-\
+\end{minipage}
+\begin{minipage}[c]{0.2\textwidth}
+\begin{tikzpicture}
+    \clip (0,0) circle (1.75cm);
+    \node at (0,-.7) {\includegraphics[width = 5cm]{myphoto}}; 
+    % if necessary the picture may be moved by changing the at (coordinates)
+    % width defines the 'zoom' of the picture
+\end{tikzpicture}
+\hfill\vline\hfill
+\end{minipage}
+\begin{minipage}[c]{0.4\textwidth}
+    \textbf{\huge \scshape{Manoj Nagappan}} \\ \vspace{1pt} 
+    \small{Research Scholar} \\
+    \small{SRM Institute of Science and Technology} \\
+    \small{Tamil Nadu, India} \\
+    \Mobilefone\ \small{+91\,75\,58\,13\,22\,32} \\
+    \vspace{0.2cm}
+    \MVAt\  \href{mailto:manojnu04@gmail.com}{\underline{manojnu04@gmail.com}}\\
+    \ORCIDlogosymbol\ \ \href{https://orcid.org/0009-0005-7220-1287}{\underline{https://orcid.org/0009-0005-7220-1287}}\\
+    \Scopuslogosymbol\ \ \href{https://www.scopus.com/authid/detail.uri?authorId=57836199000}{\underline{https://www.scopus.com/authid/detail.uri?authorId=57836199000}}\\
+    \GoogleScholarlogosymbol\ \ \href{https://scholar.google.com/citations?hl=en&authuser=2&user=NWYlZ10AAAAJ}{\underline{scholar.google.com/citations?hl=en\&authuser=2\&user=NWYlZ10AAAAJ}}\\
+    \ResearchGatelogosymbol\ \ \href{https://www.researchgate.net/profile/Manoj-Nagappan}{\underline{https://www.researchgate.net/profile/Manoj-Nagappan}}\\
+\end{minipage}
+
+\vspace{0.5cm}
+%-----EDUCATION----------------------------------------------------------------
+\section{\textbf{\huge Education}}
+\begin{table}[h]
+\centering
+\begin{tabular}{||c|c|c|c|c|c||}
+\toprule
+\ \ \textbf{Course} \ \ & \ \ \textbf{Institution} \ \ & \ \ \textbf{University/} \ \ &\ \ \textbf{Year} \  \ & \ \ \textbf{Class} \  \ &\  \ \textbf{Medium} \\
+  &  & \ \ \textbf{Board} \ \ & \ \ \textbf{of Passing} \ \ & \ \ \textbf{and CGPA} \ \ & \ \ \textbf{of Instruction} \ \ \\
+\midrule\midrule
+\ \ \textbf{Doctor } \ \ & \ \ SRM \ \ & \ \ SRM & \ \ Expected to \ \ & \ \ - \ \ & \ \ English \ \ \\
+\ \ \textbf{of} \ \ & \ \ Institute of Science \ \ & \ \ Institute of Science \ \ & graduate in  & \ \  \ \ &  \\
+\ \ \textbf{Philosophy} \ \ & \ \  and Technology, \ \ & \ \  and Technology, \ \ & 2027  & \ \  \ \ &  \\
+\ \textbf{(Mathematics)} \ & \ \ Chengalpattu, \ \ & \ \ Chengalpattu, \ \ &   &  &  \\
+& \ \ Tamil Nadu, India \ \ & \ \ Tamil Nadu, India \ \ &   &  &  \\
+\midrule
+ \ \ \textbf{Master } \ \ & \ \ Nesamony \ \ & \ \ Manonmaniam & \ \ 2022 \ \ & \ \ First class \ \ & \ \ English \ \ \\
+ \ \ \textbf{of} \ \ & \ \ Memorial \ \ & \ \ Sundaranar \ \ &   & \ \ with distinction \ \ &  \\
+ \ \ \textbf{Science} \ \ & \ \ Christian College, \ \ & \ \ University, \ \ &   & \ \ (CGPA: {\bf 9.73/10}) \ \ &  \\
+ \ \textbf{(Mathematics)} \ & \ \ Kanniyakumari, \ \ & \ \ Tirunelveli, \ \ &   &  &  \\
+  & \ \ Tamil Nadu, India \ \ & \ \ Tamil Nadu, India \ \ &   &  &  \\
+\midrule
+\ \ \textbf{Bachelor } \ \ & \ \ Lekshmipuram \ \ & \ \ Manonmaniam & \ \ 2020 \ \ & \ \ First class \ \ & \ \ English \ \ \\
+\ \ \textbf{of} \ \ & \ \ College of \ \ & \ \ Sundaranar \ \ &   & \ \ with distinction \ \ &  \\
+\ \ \textbf{Science} \ \ & \ \ Arts \& Science, \ \ & \ \ University, \ \ &   & \ \ (CGPA: {\bf 8.66/10}) \ \ &  \\
+\ \textbf{(Mathematics)} \ & \ \ Kanniyakumari, \ \ & \ \ Tirunelveli, \ \ &   &  &  \\
+& \ \ Tamil Nadu, India \ \ & \ \ Tamil Nadu, India \ \ &   &  &  \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\vspace{1cm}
+%-----Interests-------------------------------------------------------------------
+\section{\textbf{\huge Current Research Interests}}
+\begin{multicols}{2}
+	\begin{itemize}
+		\item Control theory
+		\item Optimal control
+		\item Linear tracking control
+		\item Adaptive dynamic programming
+		\item Reinforcement learning
+		\item Neural networks
+	\end{itemize}
+\end{multicols}
+
+\newpage
+
+%-----WORK EXPERIENCE----------------------------------------------------------
+\section{\textbf{\huge Experience}}
+\textbf{Research Experience}
+\begin{itemize}
+	\item \textbf{Project Associate - I (Mar 2024 -- May 2025)}
+	\begin{itemize}
+		\item[] \underline{Project title}: \textit{\textbf{Design and Analysis of fractional-order Clifford-valued neural networks and its application to image encryption}}
+		\item[] \underline{Project funded by}: \textit{\textbf{Science and Engineering Research Board (SERB), Department of Science and Technology, Government of India}} 
+		\item[] \underline{Grand file number:} \textit{\textbf{EEQ/2023/000513}}
+		\item[] \underline{Institute}: \textit{\textbf{SRM Institute of Science and Technology, Chengalpattu, Tamil Nadu, India}}
+		\item[] \underline{Department}: \textit{\textbf{Mathematics}}
+		\item[] \underline{Principal investigator}: \textit{\textbf{Dr. R. Sriraman}, Assistant professor, Division of Mathematics, Vellore Institute of Technology, Chennai, Tamil Nadu, India}
+	\end{itemize}
+\end{itemize}
+\textbf{Teaching Experience}
+\begin{itemize}
+	\item \textbf{Assistant Professor (Jul 2023 -- Feb 2024)}
+	\begin{itemize}
+		\item[] \underline{Institute}: \textit{\textbf{Sri Vidya Mandir Arts \& Science college, Krishnagiri, Tamil Nadu, India}}
+		\item[] \underline{Department}: \textit{\textbf{Mathematics}}
+	\end{itemize}
+\end{itemize}
+
+
+%-----AWARDS AND HONORS----------------------------------------------------------
+%\section{\textbf{\huge 
+%Awards and Honors}}
+%\begin{itemize}
+%	\item
+%	\end{itemize}
+
+
+%-----MEMBERSHIP----------------------------------------------------------
+\section{\textbf{\huge 
+		Membership in Academic Bodies}}
+\begin{itemize}
+	\item Graduate Student Member (2025-2026) - Institute of Electrical and Electronics Engineers (IEEE).
+\end{itemize}
+
+%------Research Collaboration--------------------------------------------------
+%\section{\textbf{\huge Research Collaboration}}
+% \begin{itemize}
+% 	\item \textbf{Dr. Sriraman Ramalingam}\\
+% 	Assistant professor \\	
+% 	Division of Mathematics, School of Advanced Sciences\\
+% 	Vellore Institute of Technology, Chennai campus\\
+% 	Tamil Nadu, India
+% 	
+%	\item \textbf{Dr. Sathishkumar Murugesan}\\
+%	Research assistant professor\\
+%	Department of Mathematics\\
+%	SRM Institute of Science and Technology\\
+%    Tamil Nadu, India
+%	
+%	\item \textbf{Dr. Yen-Chen Liu}\\
+%	Professor\\
+%	Department of Mechanical Engineering\\
+%	National Cheng Kung University\\
+%	Tainan, Taiwan
+%	
+%	\item \textbf{Dr. Pratap Anbalagan}\\
+%	Full-time Researcher\\
+%	College of Mechatronics and Control Engineering\\
+%	Shenzhen University\\
+%	Shenzhen, China
+	
+%	\item \textbf{Dr. Yilun Shang}\\
+%	Associate Professor\\
+%	Department of Computer and Information Sciences\\
+%	Northumbria University\\
+%	Newcastle upon Tyne, England
+%\end{itemize}
+
+%-----RESEARCH PUBLICATIONS----------------------------------------------------
+\section{\textbf{\huge Research Publications}}
+ \textbf{Published Papers in SCI/SCIE (Peer-reviewed)}
+\begin{itemize}
+	\item[2026] {\bf N. Manoj}, R. Sriraman, \lq\lq Projective synchronization of fractional-order BAM Clifford-valued delayed memristive neural networks: An inner product-based inequality'', \textbf{\textit{Mathematical Methods in the Applied Sciences (IF: 1.8)}}.\\ \textit{\url{https://doi.org/10.1002/mma.70592}}
+	\item[2026] R. Sriraman, {\bf N. Manoj}, \lq\lq Finite-time Stability of fractional-order delayed Clifford-valued neural networks via a novel non-separation approach'', \textbf{\textit{Computational and Applied Mathematics (IF: 2.5)}} , vol. 45, Article No. 295.\\ \textit{\url{https://doi.org/10.1007/s40314-026-03690-9}}
+	\item[2025] {\bf N. Manoj}, R. Sriraman, R. Gurusamy, Yilun Shang, \lq\lq Further results on global stability of Clifford-valued neural networks subject to time-varying delays'', \textbf{\textit{Neurocomputing (IF: 6.5)}}, vol. 651, Oct. 2025, Article No. 130886.\\ \textit{\url{https://doi.org/10.1016/j.neucom.2025.130886}}
+	\item[2025] R. Sriraman, {\bf N. Manoj}, P. Agarwal, J. Vigo-Aguiar, S. Jain, \lq\lq Event-triggered control for exponential synchronization of reaction–diffusion fractional-order Clifford-valued delayed neural networks and its application to image encryption'', \textbf{\textit{Neurocomputing (IF: 6.5)}}, vol. 648, Article No. 130604.\\ \textit{\url{https://doi.org/10.1016/j.neucom.2025.130604}}
+	\item[2025] R. Sriraman, {\bf N. Manoj}, Pratap Anbalagan, \lq\lq Decomposition method-based global Mittag-Leffler synchronization for fractional-order Clifford-valued neural networks with transmission delays and impulses'', \textbf{\textit{Neural Networks (IF: 6.3)}}, vol. 189, Sep. 2025, Article No. 107564.\\ \textit{\url{https://doi.org/10.1016/j.neunet.2025.107564}}
+	\item[2025] {\bf N. Manoj}, R. Sriraman, R. Gurusamy, Yilun Shang, \lq\lq Design and analysis of quaternion-valued neural networks for storing and retrieving color images'', \textbf{\textit{Journal of Applied Mathematics and Computing (IF: 2.7)}}, vol. 71, pp. 617--643.\\ \textit{\url{https://doi.org/10.1007/s12190-025-02485-1}}
+	\item[2025]{\bf N. Manoj}, R. Sriraman, \lq\lq Global Mittag-Leffler stability and synchronization of fractional-order Clifford-valued delayed neural networks with reaction-diffusion terms and its application to image encryption'', \textbf{\textit{Information Sciences (IF: 6.8)}}, vol. 698, Article No. 121773.\\ \textit{\url{https://doi.org/10.1016/j.ins.2024.121773}}
+\end{itemize}
+
+\textbf{Accepted Paper}
+\begin{itemize} 
+	\item[2026] R. Sriraman, {\bf N. Manoj}, \lq\lq Finite-time Stability of fractional-order delayed Clifford-valued neural networks via a novel non-separation approach'', \textbf{\textit{Physica Scripta (IF: 2.6)}} - Accepted.
+\end{itemize}
+
+\textbf{Accepted Conference Papers (Peer-reviewed)}
+\begin{itemize}
+	\item[2026] \textbf{N. Manoj}, M. Sathishkumar, Quang Huy Tran, Yen-Chen Liu, \lq\lq Complex-valued optimal control for three-phase voltage source converter model using policy iteration'', \textbf{\textit{2026 American Control Conference (ACC), New Orleans, Louisiana, USA}} - Accepted.
+\end{itemize}
+\begin{itemize}
+	\item[2025] {\bf N. Manoj}, M. Sathishkumar, \lq\lq Optimal control for complex-valued linear systems via self-stabilizing policy iteration with relaxed initial stability'', \textbf{\textit{15th Asian Control Conference (ASCC) 2026, Nusa Dua Bali, Indonesia}} - Accepted.
+\end{itemize}
+
+%\newpage
+\textbf{Published Book Chapters}
+\begin{itemize}
+	\item[2025] {\bf N. Manoj}, R. Sriraman, \lq\lq Global asymptotic stability of complex-valued delayed neural networks for optimization problems''. In Metaheuristic Algorithms and Optimizing Neural Networks for Biomedical Image Processing (pp. 171--196). IGI Global Scientific Publishing.\\ \textit{\url{https://doi.org/10.4018/979-8-3373-0523-3.ch007}}
+\end{itemize}
+
+\textbf{Communicated Conference Papers (Peer-reviewed)}
+\begin{itemize}
+	\item[2025] {\bf N. Manoj}, M. Sathishkumar, Yen-Chen Liu, \lq\lq Model-Based Homotopic Policy Iteration for Optimal Control of Complex-Valued Linear System'', \textbf{\textit{The International Conference on Advanced Robotics and Intelligent Systems (ARIS) 2026, National Cheng Kung University, Tainan, Taiwan}} - Submitted.
+\end{itemize}
+
+\textbf{Communicated Papers}
+\begin{itemize}
+	\item[2026] {\bf N. Manoj}, M. Sathishkumar, Michael Defoort, \lq\lq Linear quadratic tracking control using homotopic policy iteration-based reinforcement learning approach'', \textbf{\textit{IEEE Transactions on Cybernetics (IF: 7)}} - Communicated.
+	\item[2026] {\bf N. Manoj}, M. Sathishkumar, Srimanta Santra, Yen-Chen Liu, \lq\lq Optimal Control for Ground Vehicle Lateral Motion Stability with Completely Unknown Dynamics: A Reinforcement Learning Approach'', \textbf{\textit{IEEE Transactions on Vehicular Technology (IF: 7.1)}} - Communicated.
+%	\item[2025] {\bf N. Manoj}, M. Sathishkumar, R. Sriraman, \lq\lq Fractional-order delayed Clifford-valued neural networks for high-capacity auto-associative memories: A flexible activation function'', \textbf{\textit{IEEE Transactions on Cybernetics (IF: 10.5)}} - Communicated.
+\end{itemize}
+
+%-----Workshop DETAILS---------------------------------------
+\section{\textbf{\huge Workshop Participated}}
+\begin{itemize}
+	\item Participated on \textbf{\lq\lq Workshop on Post-Quantum Cryptography and Quantum Computing''} from $05^{th}$ - $09^{th}$ January $2026$, organized by Centre of Mathematical Modelling and Quantum Computing, The Gandhigram Rural Institute, Gandhigram, Dindigul, Tamil Nadu, India.
+\end{itemize}
+
+
+
+%-----CONFERENCE DETAILS---------------------------------------
+%\section{\textbf{\huge Conferences Participated/Paper Presented}}
+%\textbf{International}
+%\begin{itemize}
+%	\item 
+%	\item 
+%\end{itemize}
+
+%\textbf{National}
+%\begin{itemize}
+%	\item 
+%	\item 
+%\end{itemize}
+
+
+%-----Reviwer details--------------------------------------------------
+\section{\textbf{\huge Reviewer for International Journals}}
+\begin{itemize}
+	\item Expert Systems With Applications
+	\item Neurocomputing 
+	\item Scientific Reports
+\end{itemize}
+
+
+%-----SKILLS-------------------------------------------------------------------
+\section{\textbf{\huge Skills}}
+ \textbf{Computer Proficiency}
+ \begin{itemize}
+ 	\item Python
+ 	\item MATLAB
+ 	\item Linux OS
+ 	\item LaTeX Software
+ 	\item Microsoft Office
+ \end{itemize}
+ 
+  %-----PERSONAL INFO----------------------------------------------------
+ \section{\textbf{\huge Personal Information}}
+ \begin{itemize}
+ 	\item \textit{Father's Name:}  Mr. R. Nagappan
+ 	\item \textit{Mother's Name:}  Mrs. T. Uma Devi
+ 	\item \textit{Date of Birth:}  14-04-2000
+ 	\item \textit{Nationality:} Indian
+ 	\item \textit{Gender:} Male
+ 	\item \textit{Languages Known:} English, Tamil, and Malayalam.
+ \end{itemize}
+ 
+ 
+ %-----REFERENCES--------------------------------------------------------
+ \section{\textbf{\huge References}}
+ \begin{itemize}
+ 	\item \textbf{Dr. Sathishkumar Murugesan}\\
+ 	Research assistant professor\\
+ 	Department of Mathematics\\
+ 	SRM Institute of Science and Technology\\
+ 	Kattankulathur, Chengalpattu, Tamil Nadu-603 203, India\\
+ 	E-mail: \textit{sathishm9@srmist.edu.in}
+ 	
+ 	\item \textbf{Dr. Sriraman Ramalingam}\\
+ 	Assistant professor \\	
+ 	Department of Mathematics, School of Advanced Sciences\\
+ 	Vellore Institute of Technology\\
+ 	Vandalur – Kelambakkam Road, Chennai, Tamil Nadu-600 127, India\\
+ 	E-mail: \textit{sriraman.r@vit.ac.in}
+ \end{itemize}
+ 
+ 
+
+ 
+ %-----DECLARATION----------------------------------------------------
+% \section{\textbf{\huge Declaration}}
+%\begin{itemize}
+%\item[] I hereby state that all the information noted above is accurate to the best of my beliefs and I take full responsibility for the correctness of the information.\newline
+%
+%\vspace*{2pt}
+%\hspace{0.2cm} Place: Chennai, Tamil Nadu, India   \hspace{180pt}                     	     
+%Yours faithfully\\
+%\hspace{0.2cm} Date: \today		\hspace{220pt}     		                
+%{\bf Manoj Nagappan}
+%\end{itemize}
+%------------------------------------------------------------------------------
+\end{document}
